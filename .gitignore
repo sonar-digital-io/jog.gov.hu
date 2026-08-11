@@ -1,0 +1,13 @@
+# OS / editor
+Thumbs.db
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# node (nincs dependency, csak biztonsagbol)
+node_modules/
+
+# ideiglenes
+*.log
+scratchpad/

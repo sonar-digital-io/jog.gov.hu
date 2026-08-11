@@ -1,0 +1,14 @@
+{
+  "name": "jog-gov-hu-mirror",
+  "version": "1.0.0",
+  "private": true,
+  "description": "jog.gov.hu lokalis tukor - build/serve/test tesztelesi celra",
+  "scripts": {
+    "start": "python scripts/serve.py",
+    "serve": "python scripts/serve.py",
+    "build": "python scripts/mirror.py && python scripts/fetch_assets.py && python scripts/patch_nav.py",
+    "assets": "python scripts/fetch_assets.py",
+    "patch": "python scripts/patch_nav.py",
+    "test": "python scripts/smoke_test.py"
+  }
+}

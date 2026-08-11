@@ -1,0 +1,1 @@
+var t=(e=>(e.A="A",e.B="B",e))(t||{});function a(e){return{startMaintenance:new Date(Number(e.start_maintenance)*1e3),endMaintenance:new Date(Number(e.stop_maintenance)*1e3),title:e.title,message:e.message}}function i(e,n=new Date){return n>=e.startMaintenance&&n<=e.endMaintenance}export{t as I,i,a as p};

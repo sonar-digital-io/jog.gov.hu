@@ -1,0 +1,1 @@
+import{r}from"./chunk-JZWAC4HX-CrGT90sy.js";import{T as t}from"./TelemetryContext-DygBxvbt.js";function m(){const e=r.useContext(t);if(!e)throw new Error("useTelemetry must be used within TelemetryProvider");return e}export{m as u};
