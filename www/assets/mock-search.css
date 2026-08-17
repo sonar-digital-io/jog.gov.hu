@@ -1,0 +1,267 @@
+/* mock-search.css - a jog.gov.hu MI kereso mock ujraepitese (offline, mock service).
+   A szinek a design system brand (teal) rampjabol jonnek, hogy egyezzen az elessel. */
+:root {
+  --ms-brand-100: #edf4f2;
+  --ms-brand-200: #d2e8e3;
+  --ms-brand-300: #b7dcd3;
+  --ms-brand-600: #66b8a5;
+  --ms-brand-1000: #278774;
+  --ms-brand-1100: #227b6b;
+  --ms-brand-1600: #0b3d3e;
+  --ms-ink: #2b3a3f;
+  --ms-grey: #606b7a;
+  --ms-grey-soft: #8a97a0;
+  --ms-line: #e2eae7;
+  /* a valasz-fejlec k2s markjai (a k2s bundle nincs a tukorben -> kozelito ertekek) */
+  --ms-hl: #a9ebdc;          /* brand-highlighted   – buborek háttér */
+  --ms-hl-strong: #37f0bf;   /* brand-highlighted-strong – ikon doboz háttér */
+  --ms-primary: #0b5c4c;     /* brand-primary       – fejléc szöveg */
+}
+
+/* ---------- searchbar (a hero aljara lognak) ---------- */
+.ms-searchbar-wrap { width: 100%; }
+.ms-searchbar {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid #e5ece9;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px -18px rgba(11, 61, 62, .35);
+  padding: 18px 16px 18px 22px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ms-searchbar.is-focus {
+  border-color: var(--ms-brand-1000);
+  box-shadow: 0 0 0 3px rgba(39, 135, 116, .12), 0 18px 40px -18px rgba(11, 61, 62, .35);
+}
+.ms-input {
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  resize: none;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ms-ink);
+  background: transparent;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ms-input::placeholder { color: #9aa7ac; }
+.ms-iconbtn {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border: 0; background: transparent; cursor: pointer; padding: 0;
+  border-radius: 8px; color: var(--ms-brand-1000);
+}
+.ms-iconbtn:hover { background: var(--ms-brand-100); }
+.ms-clear { color: #4a5560; font-size: 22px; line-height: 1; }
+.ms-search svg { width: 22px; height: 22px; }
+
+/* ---------- toggles ---------- */
+.ms-toggles {
+  display: flex; flex-wrap: wrap; gap: 28px;
+  margin-top: 18px; padding: 0 6px;
+}
+.ms-toggle {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 15px; color: var(--ms-ink); cursor: pointer; user-select: none;
+}
+.ms-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ms-track {
+  position: relative; flex: 0 0 auto;
+  width: 40px; height: 22px; border-radius: 999px;
+  background: #c9d3d1; transition: background .15s ease;
+}
+.ms-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25);
+  transition: transform .15s ease;
+}
+.ms-toggle input:checked + .ms-track { background: var(--ms-brand-1000); }
+.ms-toggle input:checked + .ms-track .ms-knob { transform: translateX(18px); }
+
+/* ---------- searchbar a VALÓDI design system komponensekből ---------- */
+.ms-searchbar-ds { position: relative; width: 719px; max-width: 100%; }
+.ms-input-ds {
+  display: block; width: 100%;
+  --dds-textarea-min-rows: 1;
+}
+.ms-input-ds::part(base) { border-radius: var(--dds-radius-lg, 16px); gap: 0; margin-top: 0; height: 114px; box-sizing: border-box; }
+.ms-input-ds::part(input) {
+  padding-top: 14px; padding-right: 96px; line-height: 1.3;
+  resize: none; scrollbar-width: none; height: 100%; box-sizing: border-box;
+}
+.ms-actions {
+  position: absolute; right: 8px; top: 8px;
+  display: flex; align-items: center; gap: 8px; z-index: 10;
+}
+.ms-toggles-ds { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; padding: 0 2px; }
+/* switch szinek (a dds valtozok atoroklodnek a shadow DOM-ba) */
+.ms-toggles-ds dap-ds-switch {
+  --dds-switch-checked-bg: #37f0bf;   /* track – kijelölve */
+  --dds-switch-unchecked-bg: #606b7a; /* track – nincs kijelölve */
+  --dds-switch-thumb-color: #fff;     /* toggle (thumb) */
+}
+/* kezdőlap: sötét hero -> világos felirat (a dds-label örökli a color-t) */
+.ms-on-dark .ms-toggles-ds dap-ds-switch { color: #eaf3f0; }
+
+/* ---------- legördülő: népszerű / legutóbbi keresések ---------- */
+.ms-suggest {
+  position: absolute; top: 100%; left: 0; width: 100%; box-sizing: border-box;
+  margin-top: 8px; padding: 18px 20px;
+  background: #fff; border: 2px solid var(--ms-brand-200);
+  border-radius: 12px; z-index: 30;
+  box-shadow: 0 20px 44px -20px rgba(11, 61, 62, .38);
+  display: none; gap: 20px;
+}
+.ms-suggest.is-open { display: flex; }
+@media (max-width: 640px) { .ms-suggest { flex-direction: column; } }
+.ms-suggest-col { flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+/* natic <ul> reset: alapertelmezett margo/padding/pontok nelkul, a gombok
+   flex-oszlopba rendezve, teljes szelesseggel (kulonben align-items:flex-start
+   miatt csak a tartalmukhoz igazodnanak, es a gomb sajat width:100%-a a szuk
+   <li>-hez viszonyulna, nem az oszlophoz) */
+.ms-suggest-ul {
+  list-style: none; margin: 0; padding: 0; width: 100%;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ms-suggest-ul > li { width: 100%; }
+.ms-suggest-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 15px; color: var(--ms-ink); margin-bottom: 2px;
+}
+.ms-suggest-title svg { flex: 0 0 auto; }
+.ms-suggest-btn {
+  background: none; border: 0; padding: 0; margin: 0; width: 100%;
+  text-align: left; font: inherit; font-size: 13px; line-height: 1.4;
+  color: var(--ms-brand-1100); cursor: pointer;
+  outline-color: var(--dds-focus-outer-ring);
+  outline-offset: var(--dds-spacing-50);
+  outline-width: var(--dds-border-width-large);
+}
+.ms-suggest-btn:hover { text-decoration: underline; }
+.ms-suggest-btn:focus-visible {
+  outline-style: solid;
+  border-radius: var(--dds-radius-base);
+}
+
+/* ---------- results ---------- */
+.ms-results { width: 100%; margin-top: 40px; }
+.ms-results-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .ms-results-grid { grid-template-columns: 1fr; }
+}
+
+.ms-answer-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px -22px rgba(11, 61, 62, .32);
+  padding: 34px 40px 30px;
+}
+.ms-answer-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  margin-bottom: 22px;
+}
+.ms-head-badge { display: flex; align-items: stretch; min-width: 0; }
+.ms-owl {
+  flex: 0 0 auto; align-self: flex-end;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px; margin-right: 4px; border-radius: 10px;
+  background: var(--ms-hl-strong); color: #fff;
+}
+.ms-owl svg { width: 26px; height: 33px; display: block; }
+.ms-answer-label {
+  align-self: flex-end;
+  background: var(--ms-hl);
+  color: var(--ms-primary);
+  font-weight: 600; font-size: 16px; line-height: 1.3;
+  padding: 12px 14px;
+  border-radius: 10px; border-bottom-left-radius: 0;
+}
+.ms-answer-id {
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: italic; font-size: 12px; color: #b8c2c0;
+  white-space: nowrap; padding-top: 6px;
+}
+
+.ms-answer-body { color: var(--ms-ink); font-size: 16px; line-height: 1.62; }
+.ms-answer-body p { margin: 0 0 16px; }
+.ms-answer-body strong { font-weight: 700; }
+.ms-answer-body ul, .ms-answer-body ol { margin: 0 0 16px; padding-left: 26px; }
+.ms-answer-body ul { list-style: disc outside; }
+.ms-answer-body ol { list-style: decimal outside; }
+.ms-answer-body li { margin: 0 0 10px; display: list-item; }
+.ms-answer-body li::marker { color: var(--ms-ink); }
+.ms-answer-body .ms-lead { font-weight: 700; margin-bottom: 8px; }
+
+.ms-cite {
+  display: inline-flex; vertical-align: -2px; margin-left: 5px;
+  color: var(--ms-brand-1000); text-decoration: none;
+}
+.ms-cite svg { width: 15px; height: 15px; }
+
+.ms-disclaimer {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--ms-grey-soft); font-style: italic; font-size: 14px;
+  margin-top: 22px;
+}
+.ms-disclaimer svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+.ms-sep { border: 0; border-top: 1px solid var(--ms-line); margin: 26px 0; }
+
+.ms-feedback h3 {
+  margin: 0 0 4px; font-size: 24px; font-weight: 700;
+  color: var(--ms-brand-1600);
+}
+.ms-feedback p { margin: 0 0 16px; color: var(--ms-ink); font-size: 15px; }
+.ms-thumbs { display: flex; gap: 14px; }
+.ms-thumb {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid var(--ms-brand-300); background: #fff;
+  color: var(--ms-brand-1000); cursor: pointer;
+  display: grid; place-items: center;
+}
+.ms-thumb:hover { background: var(--ms-brand-100); }
+.ms-thumb.is-active { background: var(--ms-brand-1000); color: #fff; border-color: var(--ms-brand-1000); }
+.ms-thumb svg { width: 20px; height: 20px; }
+
+/* ---------- side column ---------- */
+.ms-info {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--ms-brand-100);
+  border-radius: 12px; padding: 16px 18px;
+  color: var(--ms-ink); font-size: 15px; line-height: 1.5;
+  margin-bottom: 26px;
+}
+.ms-info svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--ms-brand-1100); margin-top: 1px; }
+.ms-laws-title {
+  margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--ms-brand-1600);
+}
+.ms-law { margin-bottom: 20px; }
+.ms-law a {
+  color: var(--ms-brand-1000); font-weight: 600; font-size: 15px;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.ms-law .ms-law-desc { margin-top: 4px; color: var(--ms-grey); font-size: 14px; line-height: 1.5; }
+
+/* ---------- loading ---------- */
+.ms-loading { display: flex; align-items: center; gap: 12px; color: var(--ms-brand-1100); padding: 24px 4px; font-size: 15px; }
+.ms-spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--ms-brand-300); border-top-color: var(--ms-brand-1000);
+  animation: ms-spin .8s linear infinite;
+}
+@keyframes ms-spin { to { transform: rotate(360deg); } }
+
+.ms-empty { color: var(--ms-grey); font-size: 15px; padding: 20px 4px; }

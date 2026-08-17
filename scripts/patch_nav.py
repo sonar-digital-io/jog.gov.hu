@@ -8,8 +8,15 @@ Ok: az RR kattintaskor a /__manifest + route-loader vegpontokat keri, amik a
 statikus szerveren 404-elnek -> "Varatlan hiba tortent." A lemezen viszont minden
 oldal ott van sajat index.html-kent, igy a teljes betoltes helyesen mukodik.
 
-Idempotens: a MARKER-t egyszer szurja be. Fusd a mirror.py utan (npm run build resze)."""
-import os, glob
+KIVETEL: a fonavigacio legordulo menuinek trigger-e. Annak a gombnak van href-je,
+de kattintasra nem navigalnia kell, hanem kinyitnia a legordulot - ha elkapnank,
+az "Agazati kozlonyok" es a tobbi almenu egerrel sem lenne hasznalhato. A panelen
+beluli linkeket viszont tovabbra is elkapjuk, azok valodi navigaciok.
+
+Idempotens: a MARKER-t egyszer szurja be, ujrafuttatasnal frissiti."""
+import glob
+import os
+import re
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "www")
 MARKER = "offline-nav-fix"
@@ -20,26 +27,47 @@ SNIPPET = (
     "var p=e.composedPath?e.composedPath():[];var el=null;"
     "for(var i=0;i<p.length;i++){var n=p[i];if(n&&n.getAttribute){var h=n.getAttribute('href');"
     "if(h&&h.charAt(0)==='/'){el=n;break;}}}"
-    "if(!el)return;var href=el.getAttribute('href');if(href.indexOf('/assets/')===0)return;"
+    "if(!el)return;"
+    # A legordulos menu trigger-et nem bantjuk: az nyitja a panelt, nem navigal.
+    # Fontos: a trigger-t a composedPath-bol keressuk, mert a link a gomb shadow
+    # DOM-jaban van, es a closest() nem lep at a shadow hataron.
+    "var inTrigger=false;"
+    "for(var j=0;j<p.length;j++){var m=p[j];if(!m||!m.tagName)continue;"
+    "if(m.getAttribute&&m.getAttribute('slot')==='trigger')inTrigger=true;"
+    "if(m.tagName.toLowerCase()==='dap-ds-navigation-menu-item'){"
+    "if(inTrigger&&(m.hasContent||m.querySelectorAll('dap-ds-navigation-menu-item').length))return;"
+    "break;}}"
+    "var href=el.getAttribute('href');if(href.indexOf('/assets/')===0)return;"
     "e.preventDefault();e.stopImmediatePropagation();window.location.assign(href);"
     "},true);})();</script>"
 )
+EXISTING_RE = re.compile(r"<script>/\*" + MARKER + r"\*/.*?</script>", re.S)
+
 
 def patch(path):
     html = open(path, encoding="utf-8", errors="replace").read()
+    original = html
+
     if MARKER in html:
+        html = EXISTING_RE.sub(lambda m: SNIPPET, html, count=1)
+    else:
+        i = html.lower().find("<head")
+        if i == -1:
+            return False
+        i = html.find(">", i) + 1          # beszuras kozvetlenul a <head ...> utan
+        html = html[:i] + SNIPPET + html[i:]
+
+    if html == original:
         return False
-    i = html.lower().find("<head")
-    if i == -1:
-        return False
-    i = html.find(">", i) + 1          # beszuras kozvetlenul a <head ...> utan
-    open(path, "w", encoding="utf-8").write(html[:i] + SNIPPET + html[i:])
+    open(path, "w", encoding="utf-8").write(html)
     return True
+
 
 def main():
     files = glob.glob(os.path.join(ROOT, "**", "*.html"), recursive=True)
     patched = sum(patch(f) for f in files)
-    print(f"nav-fix beszurva: {patched}/{len(files)} HTML")
+    print("nav-fix: %d/%d HTML" % (patched, len(files)))
+
 
 if __name__ == "__main__":
     main()
