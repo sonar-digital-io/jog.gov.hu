@@ -33,6 +33,7 @@ MARKER = "mock-search-assets"
 
 # a ket kereso-oldal + a kezdolap (ott a hero-ban ugyanez a kereso fut)
 TARGETS = ("jogi-informacio-kereso", "szakmai-jogi-informacio-kereso")
+LANGS = ("en", "de", "fr", "es", "it", "zh")
 HOME = "index.html"                       # www/index.html (kezdolap)
 HOME_H2 = "Kérdezze meg, hogy mit mond a jog!</h2></div>"
 HOME_PLACEHOLDER = ('<div class="max-w-[1090px] self-center w-full">'
@@ -113,7 +114,12 @@ def patch(path, is_home=False):
 def main():
     patched, total = 0, 0
     for name in TARGETS:
-        for f in glob.glob(os.path.join(ROOT, name, "**", "index.html"), recursive=True):
+        # magyar + forditott (en/de/fr/es/it/zh) kereso-oldalak; a nyelvet a
+        # mock-search.js a <html lang>-bol olvassa
+        files = glob.glob(os.path.join(ROOT, name, "**", "index.html"), recursive=True)
+        for lang in LANGS:
+            files += glob.glob(os.path.join(ROOT, lang, name, "**", "index.html"), recursive=True)
+        for f in files:
             total += 1
             if patch(f):
                 patched += 1

@@ -39,7 +39,20 @@ SNIPPET = (
     "break;}}"
     "var href=el.getAttribute('href');if(href.indexOf('/assets/')===0)return;"
     "e.preventDefault();e.stopImmediatePropagation();window.location.assign(href);"
-    "},true);})();</script>"
+    "},true);"
+    # Kliensoldali adatkeres (.data) tartalek: a React Router a szuro-urlap (pl.
+    # "Kereses") utan /<ut>.data?...-t ker. Ha erre nincs rogzitett valasz
+    # (scripts/record_api.py), a serve.py 404-et ad, amitol a React "Application
+    # Error" oldalt mutatna. Ehelyett teljes oldalbetoltest csinalunk ugyanarra az
+    # URL-re: ha van query-s pillanatkep, azt kapjuk, kulonben a szuretlen oldalt.
+    "var of=window.fetch;if(of){window.fetch=function(input,init){"
+    "var u=typeof input==='string'?input:(input&&input.url)||'';var pr=of.apply(this,arguments);"
+    "if(!/\\.data(\\?|$)/.test(u.split('#')[0]))return pr;"
+    "return pr.then(function(r){if(r.status!==404)return r;"
+    "var x=new URL(u,location.href);x.pathname=x.pathname.replace(/\\.data$/,'');"
+    "if(x.pathname==='/_root')x.pathname='/';x.searchParams.delete('_routes');"
+    "window.location.assign(x.pathname+x.search);return new Promise(function(){});});};}"
+    "})();</script>"
 )
 EXISTING_RE = re.compile(r"<script>/\*" + MARKER + r"\*/.*?</script>", re.S)
 

@@ -10,7 +10,7 @@
   --ms-brand-1600: #0b3d3e;
   --ms-ink: #2b3a3f;
   --ms-grey: #606b7a;
-  --ms-grey-soft: #8a97a0;
+  --ms-grey-soft: #5b6670;  /* volt #8a97a0 (2,99:1) -> 5,9:1 feher alapon */
   --ms-line: #e2eae7;
   /* a valasz-fejlec k2s markjai (a k2s bundle nincs a tukorben -> kozelito ertekek) */
   --ms-hl: #a9ebdc;          /* brand-highlighted   – buborek háttér */
@@ -87,20 +87,34 @@
 
 /* ---------- searchbar a VALÓDI design system komponensekből ---------- */
 .ms-searchbar-ds { position: relative; width: 719px; max-width: 100%; }
+/* lathato mezocimke (WCAG 3.3.2) */
+.ms-label { display: block; margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #fff; /* a hero sotet hatteren all (1.4.3) */ cursor: text; }
+.ms-on-dark .ms-label { color: #fff; }
+.ms-answer-label:focus { outline: none; }
+.ms-answer-label:focus-visible { outline: 2px solid #37f0bf; outline-offset: 2px; }
+.ms-sr-only {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+  clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important;
+}
 .ms-input-ds {
   display: block; width: 100%;
   --dds-textarea-min-rows: 1;
 }
 .ms-input-ds::part(base) { border-radius: var(--dds-radius-lg, 16px); gap: 0; margin-top: 0; height: 114px; box-sizing: border-box; }
 .ms-input-ds::part(input) {
-  padding-top: 14px; padding-right: 96px; line-height: 1.3;
+  padding-top: 14px; padding-right: 90px; line-height: 1.25;
+  border-color: #606b7a; /* mint elesen; 5,3:1 a feher hatteren (1.4.11) */
   resize: none; scrollbar-width: none; height: 100%; box-sizing: border-box;
 }
 .ms-actions {
-  position: absolute; right: 8px; top: 8px;
+  position: absolute; right: 8px; top: 38px; /* a cimke (30px) alatt */
   display: flex; align-items: center; gap: 8px; z-index: 10;
 }
-.ms-toggles-ds { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; padding: 0 2px; }
+/* elesen: my-4 min-h-10 flex gap-4 items-center */
+/* kereses gomb: elesen 38x38-as, halvany brand hatteru kor */
+.ms-search-ds::part(base) { width: 38px; height: 38px; padding: 0; justify-content: center; background-color: rgba(2, 118, 113, .05); }
+.ms-toggles-ds { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; min-height: 40px; margin: 16px 0; padding: 0; }
 /* switch szinek (a dds valtozok atoroklodnek a shadow DOM-ba) */
 .ms-toggles-ds dap-ds-switch {
   --dds-switch-checked-bg: #37f0bf;   /* track – kijelölve */
@@ -181,6 +195,7 @@
 }
 .ms-owl svg { width: 26px; height: 33px; display: block; }
 .ms-answer-label {
+  margin: 0;
   align-self: flex-end;
   background: var(--ms-hl);
   color: var(--ms-primary);
@@ -191,7 +206,7 @@
 .ms-answer-id {
   flex: 0 0 auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-style: italic; font-size: 12px; color: #b8c2c0;
+  font-style: italic; font-size: 12px; color: #5b6670; /* volt #b8c2c0 (1,82:1) */
   white-space: nowrap; padding-top: 6px;
 }
 
@@ -213,14 +228,14 @@
 
 .ms-disclaimer {
   display: flex; align-items: center; gap: 7px;
-  color: var(--ms-grey-soft); font-style: italic; font-size: 14px;
+  color: var(--ms-grey-soft); font-size: 14px;
   margin-top: 22px;
 }
 .ms-disclaimer svg { width: 15px; height: 15px; flex: 0 0 auto; }
 
 .ms-sep { border: 0; border-top: 1px solid var(--ms-line); margin: 26px 0; }
 
-.ms-feedback h3 {
+.ms-feedback .ms-feedback-title {
   margin: 0 0 4px; font-size: 24px; font-weight: 700;
   color: var(--ms-brand-1600);
 }
@@ -250,7 +265,8 @@
 }
 .ms-law { margin-bottom: 20px; }
 .ms-law a {
-  color: var(--ms-brand-1000); font-weight: 600; font-size: 15px;
+  color: #1d6e60; /* volt #278774: 3,91:1 a #edf4f2 hatteren -> 5,4:1 (1.4.3) */
+  font-weight: 600; font-size: 15px;
   text-decoration: underline; text-underline-offset: 2px;
 }
 .ms-law .ms-law-desc { margin-top: 4px; color: var(--ms-grey); font-size: 14px; line-height: 1.5; }
@@ -262,6 +278,7 @@
   border: 3px solid var(--ms-brand-300); border-top-color: var(--ms-brand-1000);
   animation: ms-spin .8s linear infinite;
 }
+@media (prefers-reduced-motion: reduce) { .ms-spinner { animation-duration: 2.4s; } }
 @keyframes ms-spin { to { transform: rotate(360deg); } }
 
 .ms-empty { color: var(--ms-grey); font-size: 15px; padding: 20px 4px; }

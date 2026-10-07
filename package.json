@@ -8,12 +8,16 @@
     "serve": "python3 scripts/serve.py",
     "build": "python3 scripts/mirror.py && python3 scripts/fetch_assets.py && npm run patch",
     "assets": "python3 scripts/fetch_assets.py",
-    "patch": "python3 scripts/patch_nav.py && python3 scripts/patch_a11y.py && python3 scripts/patch_nav_semantic.py && python3 scripts/patch_mock_search.py",
+    "patch": "python3 scripts/patch_nav.py && python3 scripts/patch_a11y.py && python3 scripts/patch_mock_search.py",
     "patch:nav": "python3 scripts/patch_nav.py",
     "patch:a11y": "python3 scripts/patch_a11y.py",
-    "patch:nav-semantic": "python3 scripts/patch_nav_semantic.py",
     "patch:mock": "python3 scripts/patch_mock_search.py",
     "test": "python3 scripts/smoke_test.py",
-    "test:a11y": "node scripts/test_a11y.mjs"
+    "test:a11y": "node scripts/test_a11y.mjs",
+    "snapshot": "python3 scripts/snapshot_pages.py"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.0",
+    "playwright": "^1.56.0"
   }
 }
