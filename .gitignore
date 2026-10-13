@@ -11,3 +11,7 @@ node_modules/
 # ideiglenes
 *.log
 scratchpad/
+
+# playwright / NVDA tesztek kimenete
+test-results/
+playwright-report/

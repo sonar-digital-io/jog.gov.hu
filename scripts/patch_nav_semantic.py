@@ -30,6 +30,7 @@ BLOCK_RE = re.compile(
     r'<nav><dap-ds-navigation-menu class="main-navigation".*?</dap-ds-navigation-menu></nav>',
     re.S,
 )
+EXISTING_RE = re.compile(r'<nav class="ms-mainnav".*?</nav>', re.S)
 
 CHEVRON = ('<svg class="ms-chevron" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
            '<path d="m12 13.171 4.95-4.95 1.414 1.415L12 16 5.636 9.636 7.05 8.222z"/></svg>')
@@ -111,7 +112,9 @@ def build_nav(active):
             trigger = '<a class="ms-nav-link" href="%s"%s>%s</a>' % (href, cur, label)
         inner = trigger + (submenu_html(sub) if sub else "")
         lis.append(li_open + inner + "</li>")
-    return ('<nav class="ms-mainnav" aria-label="Főmenü"><ul class="ms-mainnav-list">'
+    # Csak felolvasonak szolo cimsor: H-val lepkedve ez az elso megallo (a fejlec a <main> elott van),
+    # igy a felhasznalo rogton valaszthat: Menu, vagy a kovetkezo H-val az oldal sajat cime.
+    return ('<nav class="ms-mainnav" aria-label="Főmenü"><h2 class="sr-only">Menü</h2><ul class="ms-mainnav-list">'
             + "".join(lis) + "</ul></nav>")
 
 
@@ -119,9 +122,11 @@ def patch(path):
     html = open(path, encoding="utf-8", errors="replace").read()
     original = html
 
+    nav = build_nav(active_key(route_of(path)))
     if BLOCK_RE.search(html):
-        nav = build_nav(active_key(route_of(path)))
         html = BLOCK_RE.sub(lambda m: nav, html, count=1)
+    else:  # mar patchelt fajl: a menut ujrageneraljuk, hogy a valtozasok ide is atkeruljenek
+        html = EXISTING_RE.sub(lambda m: nav, html, count=1)
 
     i = html.lower().rfind("</head>")
     if i != -1:
