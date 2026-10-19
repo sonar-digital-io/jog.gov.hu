@@ -95,7 +95,9 @@
   /* =================================================== 1. Ugro link (2.4.1) */
   function skipLink() {
     var main = D.querySelector("main");
-    if (main) { if (!main.id) main.id = "dds-main-content"; setAttr(main, "tabindex", "-1"); }
+    if (main) { if (!main.id) main.id = "dds-main-content"; if (D.activeElement !== main) delAttr(main, "tabindex"); }
+    // a tabindex="-1" csak az ugro link alatt kell: allandoan a <main> egy tetszoleges
+    // (nem interaktiv) kattintasra fokuszt kapna, es a bongeszo a magas <main> aljara gorgetne
     var link = D.querySelector("a.skip-to-content");
     if (!link) {
       link = D.createElement("a");
@@ -112,7 +114,23 @@
     var main = D.querySelector("main");
     if (!main) return;
     e.preventDefault();
-    main.focus();
+    // Ha van "Jogi kerdes" mezo, arra kerul a fokusz (gorgetes nelkul), es csak akkor
+    // gorgetunk hozza, ha nem lathato; kulonben a <main> kapja a fokuszt.
+    var host = D.querySelector(".ms-input-ds");
+    var field = host && (host.shadowRoot && host.shadowRoot.querySelector("textarea") || host);
+    if (field) {
+      field.focus({ preventScroll: true });
+      var r = host.getBoundingClientRect();
+      var vh = window.innerHeight || D.documentElement.clientHeight;
+      if (r.top < 0 || r.bottom > vh) {
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        host.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+      }
+    } else {
+      setAttr(main, "tabindex", "-1");
+      main.focus();
+      main.addEventListener("blur", function () { delAttr(main, "tabindex"); }, { once: true });
+    }
     if (history.replaceState) history.replaceState(history.state, "", "#" + main.id);
   }
   D.addEventListener("click", function (e) {
@@ -155,7 +173,55 @@
       });
       if (best) best.i.active = true;
     }
-    return items;
+    // egyetlen kereso: a "Szakmai kereso" menupont nincs (a Jogi MI kereso "Szakmai kereso" kapcsolojara kerult)
+    return mergeSearch(groupGazettes(items.filter(function (it) { return !/\/szakmai-jogi-informacio-kereso\/?$/.test((it.href || "").split(/[?#]/)[0]); })));
+  }
+  // A Kezdolap = a Jogi MI kereso (a teljes kereso a Kezdolapon van): egyetlen menupont, "Jogi MI kereso"
+  // felirattal a Kezdolapra mutat; a regi, kulon "Jogi MI kereso" menupont megszunik.
+  function mergeSearch(items) {
+    var home = (LANG_PREFIX || "/").replace(/(.)\/+$/, "$1");
+    var isSearch = function (it) { return /\/jogi-informacio-kereso\/?$/.test((it.href || "").split(/[?#]/)[0]); };
+    var isHome = function (it) { return (it.href || "").split(/[?#]/)[0].replace(/(.)\/+$/, "$1") === home && !it.icon; };
+    var search = items.filter(isSearch)[0];
+    if (!search) return items;
+    var homeItem = items.filter(isHome)[0];
+    var onSearch = /\/(szakmai-)?jogi-informacio-kereso\/?$/.test(location.pathname);
+    var out = [];
+    items.forEach(function (it) {
+      if (it === search) { if (!homeItem) { search.href = home; search.active = search.active || onSearch || (location.pathname.replace(/(.)\/+$/, "$1") === home); out.push(search); } return; }
+      if (it === homeItem) { it.label = search.label; it.active = it.active || search.active || onSearch; }
+      out.push(it);
+    });
+    return out;
+  }
+  // Informaciosszerkezet: "Aktualis Magyar Kozlonyok", "Agazati kozlonyok" es "Archiv agazati
+  // kozlonyok" egyetlen "Kozlonyok" legordulo alatt (fomenu + mobil fiok is ebbol epul).
+  var GAZETTES = { hu: "Közlönyök", en: "Gazettes", de: "Amtsblätter", fr: "Journaux officiels", es: "Boletines oficiales", it: "Gazzette", zh: "公报" };
+  function groupGazettes(items) {
+    var P = LANG_PREFIX, paths = [P + "/magyar-kozlony", P + "/agazati-kozlony", P + "/archiv-agazati-kozlony"];
+    var norm = function (h) { return (h || "").split(/[?#]/)[0].replace(/\/+$/, ""); };
+    var isG = function (it) {
+      return paths.indexOf(norm(it.href)) !== -1 || it.sub.some(function (x) { return paths.indexOf(norm(x.href)) !== -1; });
+    };
+    var hit = items.filter(isG);
+    if (hit.length < 2) return items;
+    var cur = location.pathname.replace(/\/+$/, "") || "/";
+    var sub = [];
+    hit.forEach(function (it) {
+      var kids = it.sub.length ? it.sub : [{ label: it.label, href: it.href, ext: false }];
+      kids.forEach(function (k) {
+        if (sub.some(function (x) { return norm(x.href) === norm(k.href); })) return;
+        sub.push({ label: k.label, href: k.href, ext: k.ext, cur: norm(k.href) === cur });
+      });
+    });
+    sub.sort(function (a, b) { return paths.indexOf(norm(a.href)) - paths.indexOf(norm(b.href)); });
+    var group = { label: GAZETTES[PAGE_LANG] || GAZETTES.en, href: null, active: hit.some(function (it) { return it.active; }), sub: sub, icon: null };
+    var out = [], placed = false;
+    items.forEach(function (it) {
+      if (hit.indexOf(it) === -1) out.push(it);
+      else if (!placed) { out.push(group); placed = true; }
+    });
+    return out;
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function buildNav(items) {
@@ -180,15 +246,15 @@
       }
       if (sub) {
         inner += '<ul class="ms-submenu" id="' + subId + '">' + sub.map(function (s) {
-          return '<li><a href="' + esc(s.href) + '"' + (s.ext ? ' target="_blank" rel="noopener"' : "") + ">" +
+          return '<li><a href="' + esc(s.href) + '"' + (s.cur ? ' aria-current="page"' : "") + (s.ext ? ' target="_blank" rel="noopener"' : "") + ">" +
                  "<span>" + esc(s.label) + "</span>" + (s.ext ? EXT + '<span class="a11y-sr-only"> ' + NEW_WIN + "</span>" : "") + "</a></li>";
         }).join("") + "</ul>";
       }
       html += "<li" + (cls.trim() ? ' class="' + cls.trim() + '"' : "") + ">" + inner + "</li>";
     });
-    var nav = D.createElement("nav");
+    // egyetlen <nav> az oldalon: a fomenu a fejlec <nav>-jaba kerul (oneNav), maga <div>
+    var nav = D.createElement("div");
     nav.className = "ms-mainnav";
-    nav.setAttribute("aria-label", S.mainNav);
     nav.innerHTML = '<ul class="ms-mainnav-list">' + html + "</ul>";
     nav.querySelectorAll(".ms-has-sub").forEach(initSubmenu);
     return nav;
@@ -244,7 +310,7 @@
     if (!ds) return;
     var dsNav = ds.parentElement;
     if (dsNav.nextElementSibling && dsNav.nextElementSibling.classList.contains("ms-mainnav")) return;
-    var old = D.querySelector("nav.ms-mainnav");
+    var old = D.querySelector(".ms-mainnav");
     if (old) old.remove();
     dsNav.parentElement.insertBefore(buildNav(readDsMenu(ds)), dsNav.nextSibling);
   }
@@ -272,6 +338,12 @@
       enhanceDsMenuItems(menu);
     });
   }
+  var hoverOff = function (e) {
+    var p = e.composedPath ? e.composedPath() : [];
+    for (var i = 0; i < p.length; i++) if (p[i] && p[i].hasAttribute && p[i].hasAttribute("data-ms-nohover")) { e.stopImmediatePropagation(); return; }
+  };
+  D.addEventListener("mouseover", hoverOff, true);
+  D.addEventListener("mousemove", hoverOff, true);
   // A DS legordulo csak <dap-ds-navigation-menu-item> tartalmat kezel billentyuzettel;
   // itt slotolt <a> linkek vannak -> Enter nem nyitott, Tab becsukta a panelt.
   function enhanceDsMenuItems(menu) {
@@ -291,14 +363,23 @@
       function focusFirst() {
         Promise.resolve(el.updateComplete).then(function () { setTimeout(function () { var it = panelItems(); if (it.length) it[0].focus(); }, 0); });
       }
+      // nincs hover-nyitas: a nyelvvalaszto csak kattintasra / Enterre nyilik es zarul.
+      // A DS sajat egerkezeloi (mousemove/mouseover) a host-on vannak, ezert a dokumentum
+      // fogo fazisaban nyeljuk el oket (lasd hoverOff), a megjelolt elemekre. Ez nem fugg a
+      // submenuController letezesetol (az a DS renderelese utan jon letre).
+      el.setAttribute("data-ms-nohover", "");
       var c = el.submenuController;
       if (c) {
         try { c.removeListeners(); } catch (e) {}
         c.addListeners = function () {};
-        el.addEventListener("mouseover", function () { if (!el.opened) el.showDropDown(true); });
-        el.addEventListener("mouseleave", function () { if (el.opened && !el.contains(D.activeElement)) el.hideDropDown(); });
-        el.addEventListener("focusout", function (e) { if (!e.relatedTarget || !el.contains(e.relatedTarget)) el.hideDropDown(); });
       }
+      el.addEventListener("click", function (e) {
+        var t = e.target;
+        if (!(t && t.closest && t.closest('[slot="trigger"]'))) return;
+        e.preventDefault(); e.stopPropagation();
+        if (el.opened) el.hideDropDown(); else el.showDropDown(false);
+      }, true);
+      el.addEventListener("focusout", function (e) { if (!e.relatedTarget || !el.contains(e.relatedTarget)) el.hideDropDown(); });
       el.addEventListener("keydown", function (e) {
         var t = e.target, onTr = t && t.closest && t.closest('[slot="trigger"]');
         if (e.key === "Escape") {
@@ -309,6 +390,12 @@
           e.preventDefault(); e.stopPropagation();
           if (!el.opened) el.showDropDown(false);
           focusFirst(); return;
+        }
+        // Enter / Space a nyelv (link) elemen = ugyanaz, mint az egerkattintas: a DS gomb
+        // belso <button>-ja nyeli el a billentyut, a kulso <a> sosem kap kattintast.
+        if (!onTr && (e.key === "Enter" || e.key === " ")) {
+          var link = t && t.closest && t.closest("a[href]");
+          if (link && el.contains(link)) { e.preventDefault(); e.stopPropagation(); link.click(); return; }
         }
         if (el.opened && /^(ArrowDown|ArrowUp|Home|End)$/.test(e.key)) {
           var items = panelItems(); if (!items.length) return;
@@ -335,7 +422,7 @@
   /* ==================================================== 4. Landmarkok */
   function landmarks() {
     var up = D.querySelector("nav.header-upper");
-    if (up) setAttr(up, "aria-label", S.header);
+    if (up) setAttr(up, "aria-label", S.mainNav);   // a fomenu is ebben az egyetlen <nav>-ban van
     D.querySelectorAll("footer nav").forEach(function (n) { if (!n.getAttribute("aria-label")) setAttr(n, "aria-label", S.footer); });
     var logo = D.querySelector('[class*="szechenyi-terv-plus-logo"]');
     if (logo) { setAttr(logo, "role", "region"); setAttr(logo, "aria-label", "Széchenyi Terv Plusz"); }
@@ -717,10 +804,208 @@
     });
   }
 
+  /* ===== Felso sav linkjei -> "Hasznos linkek" legordulo tetejere (minden nyelven) */
+  // A lathato fomenu (nav.ms-mainnav) a rejtett DS-menubol epul (readDsMenu), ezert itt a
+  // DS-menut modositjuk, MIELOTT a mainNav() felepiti. HU-n a meglevo "Hasznos linkek"
+  // elem tetejere kerulnek, mas nyelveken uj, lenyilo "Useful links" elem jon letre.
+  var USEFUL = { hu: "Hasznos linkek", en: "Useful links", de: "Nützliche Links", fr: "Liens utiles", es: "Enlaces útiles", it: "Link utili", zh: "实用链接" };
+  var topLinks = null;
+  function usefulButton(l) {
+    return '<dap-ds-button href="' + esc(l.href) + '" variant="subtle-menu-item" target="_blank" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">' +
+      esc(l.label) + '<dap-ds-icon name="external-link-line"></dap-ds-icon></dap-ds-stack></dap-ds-stack></dap-ds-button>';
+  }
+  function usefulLinks() {
+    var tops = D.querySelectorAll("dap-ds-sidenav-item.header-navbar-first-menu-item");
+    if (tops.length) {
+      topLinks = Array.prototype.map.call(tops, function (it) { return { href: it.getAttribute("href"), label: txt(it) }; });
+      var ul = tops[0].parentNode;
+      Array.prototype.forEach.call(tops, function (it) { it.remove(); });
+      if (ul && ul.tagName === "UL" && !ul.children.length) ul.remove();
+    }
+    var ds = D.querySelector("nav > dap-ds-navigation-menu.main-navigation");
+    if (!ds || !topLinks || ds.querySelector("[data-useful-links]")) return;
+    var host = ds.querySelector('dap-ds-navigation-menu-item[basehref="/hasznos-linkek"]');
+    var buttons = topLinks.map(usefulButton).join("");
+    if (host) {
+      var list = host.querySelector("dap-ds-stack.flex");
+      if (!list) return;
+      list.insertAdjacentHTML("afterbegin", buttons);
+      list.setAttribute("data-useful-links", "");
+    } else {
+      ds.insertAdjacentHTML("beforeend",
+        '<dap-ds-navigation-menu-item class="main-navigation-item" data-useful-links=""><dap-ds-button slot="trigger" size="sm" variant="subtle-menu" class="main-menu-button">' +
+        '<dap-ds-stack direction="row" spacing="100"><dap-ds-typography size="md" variant="body" class="header-secondary-menu-label">' + esc(USEFUL[PAGE_LANG] || USEFUL.en) +
+        '</dap-ds-typography><dap-ds-icon name="arrow-down-s-line"></dap-ds-icon></dap-ds-stack></dap-ds-button>' +
+        '<dap-ds-stack spacing="100" class="flex w-max w-[-webkit-max-content]">' + buttons + "</dap-ds-stack></dap-ds-navigation-menu-item>");
+    }
+    var old = D.querySelector(".ms-mainnav");
+    if (old) old.remove();      // ujraepul a modositott DS-menubol
+  }
+
+  /* ===== Mobil menu React nelkul (kezdolap + kereso-oldalak) ==================
+   * Ezeken az oldalakon a mock kereso miatt a React bootstrap szandekosan nincs betoltve
+   * (lasd scripts/patch_mock_search.py), igy a hamburger gombnak nincs kattintas-kezeloje.
+   * Ilyenkor ugyanazt a fiokot epitjuk fel (a site sajat osztalyaival / DS elemeivel),
+   * a rejtett DS-fomenubol. Hidratalt (React-es) oldalon nem csinal semmit. */
+  var drawerState = { el: null, opener: null, bodyOverflow: "" };
+  function reactDriven(el) {
+    return Object.keys(el).some(function (k) { return k.indexOf("__reactProps") === 0; });
+  }
+  function drawerItem(it, i) {
+    var cur = it.active ? ' active=""' : "";
+    var head = '<dap-ds-divider spacing="300" variant="inverted" class="header-mobile-sidenav-item-divider divider-spacing-300" role="separator" aria-hidden="true"></dap-ds-divider>';
+    if (it.sub.length) {
+      return '<dap-ds-sidenav-group class="header-mobile-sidenav-item header-mobile-sidenav-group-item" spacing="none" size="xs">' + esc(it.label) +
+        it.sub.map(function (l) {
+          return '<dap-ds-sidenav-item size="xs" class="header-mobile-sidenav-item" slot="submenu" href="' + esc(l.href) + '" spacing="none">' + esc(l.label) +
+            (l.ext ? '<dap-ds-icon name="external-link-line" class="dap-ds-icon"></dap-ds-icon>' : "") + "</dap-ds-sidenav-item>";
+        }).join("") + "</dap-ds-sidenav-group>" + head;
+    }
+    return '<dap-ds-sidenav-item size="xs" href="' + esc(it.href || "#") + '" class="header-mobile-sidenav-item"' + cur + ' spacing="none">' + esc(it.label) + "</dap-ds-sidenav-item>" + head;
+  }
+  function closeDrawer() {
+    if (!drawerState.el) return;
+    drawerState.el.remove();
+    drawerState.el = null;
+    D.body.style.overflow = drawerState.bodyOverflow;
+    D.querySelectorAll("[data-drawer-inert]").forEach(function (n) { n.removeAttribute("inert"); n.removeAttribute("data-drawer-inert"); });
+    var op = drawerState.opener, b = op && op.shadowRoot && op.shadowRoot.querySelector("button");
+    if (b) b.setAttribute("aria-expanded", "false");
+    if (b) b.focus(); else if (op) op.focus();
+  }
+  function openDrawer(opener) {
+    if (drawerState.el) return;
+    var ds = D.querySelector("nav > dap-ds-navigation-menu.main-navigation");
+    if (!ds) return;
+    var items = readDsMenu(ds);
+    var logo = D.querySelector("header img.header-logo-beta");
+    var box = D.createElement("div");
+    box.className = "flex flex-col fixed top-0 w-full z-50";
+    box.setAttribute("data-ms-drawer", "");
+    box.innerHTML =
+      '<div class="header-upper bg-(--dds-background-brand-base-inverted) border-b border-(--dds-white-10)"><div class="flex items-center self-stretch min-w-0">' +
+      '<div class="z-50 bg-(--dds-cold-grey-1100) rounded-(--dds-radius-base)  p-[6px] pr-[12px] ml-[-16px]"><div class="flex flex-row items-center">' +
+      '<a href="' + (LANG_PREFIX || "/") + '"><img alt="' + esc(logo ? logo.getAttribute("alt") : "") + '" class="header-logo-beta" src="' + esc(logo ? logo.getAttribute("src") : "") + '"></a>' +
+      '<div class="flex h-[40px] items-center"><dap-ds-divider vertical="" spacing="200" aria-hidden="true" style="--dds-divider-border-color:rgba(209,215,223,0.4);--dds-divider-border-width:1px"></dap-ds-divider></div>' +
+      '<dap-ds-typography size="sm" variant="description" class="text-(--dds-cold-grey-400) text-[11px] font-bold">Béta</dap-ds-typography></div></div></div>' +
+      '<div class="flex flex-row justify-end items-center self-stretch gap-x-(--dds-spacing-200)"><dap-ds-button size="md" aria-label="' + esc(S.closeMenu) + '" shape="circle" variant="primary-inverted" class="header-primary-inverted-icon dds-button-square" data-ms-drawer-close="">' +
+      '<dap-ds-icon name="close-fill" size="lg" class="dap-ds-icon"></dap-ds-icon></dap-ds-button></div></div>' +
+      '<nav class="header-mobile-navbar-menu" aria-label="' + esc(S.mainNav) + '"><div class="menu-container"><div><dap-ds-sidenav>' +
+      items.map(drawerItem).join("") + "</dap-ds-sidenav></div>" +
+      "</div></nav>";
+    D.body.appendChild(box);
+    drawerState.el = box;
+    drawerState.opener = opener;
+    drawerState.bodyOverflow = D.body.style.overflow;
+    D.body.style.overflow = "hidden";
+    box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", S.mainNav);
+    D.querySelectorAll("main, footer, header").forEach(function (n) { if (!n.contains(box)) { n.setAttribute("inert", ""); n.setAttribute("data-drawer-inert", ""); } });
+    var ob = opener.shadowRoot && opener.shadowRoot.querySelector("button");
+    if (ob) ob.setAttribute("aria-expanded", "true");
+    var cl = box.querySelector("[data-ms-drawer-close]");
+    var tries = 0;
+    (function focusClose() {     // a DS elem csak a beszuras utan renderel: varunk a belso gombra
+      var cb = cl.shadowRoot && cl.shadowRoot.querySelector("button");
+      if (cb) cb.focus();
+      else if (tries++ < 20 && drawerState.el) setTimeout(focusClose, 50);
+    })();
+  }
+  D.addEventListener("click", function (e) {
+    var path = e.composedPath ? e.composedPath() : [];
+    for (var i = 0; i < path.length; i++) {
+      var n = path[i];
+      if (!n || !n.matches) continue;
+      if (n.hasAttribute && n.hasAttribute("data-ms-drawer-close")) { e.preventDefault(); closeDrawer(); return; }
+      if (n.tagName === "DAP-DS-BUTTON" && n.querySelector(':scope > dap-ds-icon[name="menu-line"]') && n.matches(".xl\\:hidden")) {
+        if (reactDriven(n)) return;       // hidralt oldal: a React kezeli
+        e.preventDefault(); openDrawer(n); return;
+      }
+    }
+  }, true);
+  D.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && drawerState.el) { e.preventDefault(); closeDrawer(); }
+  }, true);
+
+  // A mobil/tablet menuben nincs lablec-link (Kapcsolat, Felhasznaloi kezikonyv...): a React-es
+  // fiokban a blokkot (es az elotte levo elvalasztot) elrejtjuk; a DOM-ot nem toroljuk.
+  function drawerFooter() {
+    D.querySelectorAll("dap-ds-sidenav.header-mobile-sidenav").forEach(function (nav) {
+      if (!nav.querySelector('dap-ds-sidenav-item[href$="/kapcsolat"]')) return;
+      nav.classList.add("ms-drawer-footer-hidden");
+      var prev = nav.previousElementSibling;
+      if (prev && prev.tagName === "DAP-DS-DIVIDER") prev.classList.add("ms-drawer-footer-hidden");
+    });
+    // React-es fiok: a kulon "Jogi MI kereso" menupont elrejtese, a Kezdolap felirata "Jogi MI kereso"
+    var srch = D.querySelector('dap-ds-sidenav-item.header-mobile-sidenav-item[href$="/jogi-informacio-kereso"]');
+    if (srch) {
+      var label = (srch.textContent || "").replace(/\s+/g, " ").trim();
+      var homeEl = D.querySelector('dap-ds-sidenav-item.header-mobile-sidenav-item[href="' + (LANG_PREFIX || "/") + '"]') ||
+                   D.querySelector('dap-ds-sidenav-item.header-mobile-sidenav-item[href="' + (LANG_PREFIX || "/") + '/"]');
+      if (homeEl && homeEl.firstChild && homeEl.firstChild.nodeType === 3 && homeEl.firstChild.nodeValue.trim() !== label) homeEl.firstChild.nodeValue = label;
+      srch.classList.add("ms-drawer-footer-hidden");
+      var sx = srch.nextElementSibling;
+      if (sx && sx.tagName === "DAP-DS-DIVIDER") sx.classList.add("ms-drawer-footer-hidden");
+    }
+    // React-es fiok: "Szakmai kereso" menupont (+ kovetkezo elvalaszto) elrejtese
+    D.querySelectorAll('dap-ds-sidenav-item[href$="/szakmai-jogi-informacio-kereso"]').forEach(function (it) {
+      it.classList.add("ms-drawer-footer-hidden");
+      var nx = it.nextElementSibling;
+      if (nx && nx.tagName === "DAP-DS-DIVIDER") nx.classList.add("ms-drawer-footer-hidden");
+    });
+  }
+
+  /* ===== Szechenyi Terv Plusz logo -> a dap.gov.hu "DIMOP" valtozata + bezaro gomb ===== */
+  // Ugyanaz a megjelenes es mukodes, mint a dap.gov.hu-n (c-dimop-logo): jobb also sarokban
+  // fix doboz, a gomb bezarja, es a bezaras a munkamenetre (sessionStorage) megjegyzodik.
+  // A React altal renderelt elemet helyben alakitjuk (nincs masolat), a kep csak src-t kap.
+  var CLOSE_LABEL = { hu: "Bezárás", en: "Close", de: "Schließen", fr: "Fermer", es: "Cerrar", it: "Chiudi", zh: "关闭" };
+  var DIMOP_KEY = "dimop-logo-dismissed";
+  function dimopLogo() {
+    var wrap = D.querySelector('[class*="szechenyi-terv-plus-logo"].fixed');
+    if (!wrap) return;
+    var gone = false;
+    try { gone = sessionStorage.getItem(DIMOP_KEY) === "true"; } catch (e) {}
+    if (gone) { if (wrap.style.display !== "none") wrap.style.display = "none"; return; }
+    wrap.classList.add("ms-dimop-logo");
+    var img = wrap.querySelector("img");
+    if (img && img.getAttribute("src") !== "/assets/DIMOP_logo_d01847f4b9.svg") {
+      img.setAttribute("src", "/assets/DIMOP_logo_d01847f4b9.svg");
+      img.setAttribute("width", "267"); img.setAttribute("height", "52");
+      img.classList.remove("max-h-18");
+    }
+    if (wrap.querySelector("[data-ms-dimop-close]")) return;
+    var btn = D.createElement("dap-ds-button");
+    btn.setAttribute("data-ms-dimop-close", "");
+    btn.setAttribute("shape", "circle"); btn.setAttribute("variant", "primary"); btn.setAttribute("size", "xs");
+    btn.setAttribute("aria-label", CLOSE_LABEL[PAGE_LANG] || CLOSE_LABEL.en);
+    btn.className = "ms-dimop-close";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path fill="currentColor" d="m12 10.587l4.95-4.95l1.414 1.414l-4.95 4.95l4.95 4.95l-1.415 1.414l-4.95-4.95l-4.949 4.95l-1.414-1.415l4.95-4.95l-4.95-4.95L7.05 5.638z"></path></svg>';
+    btn.addEventListener("click", function () {
+      try { sessionStorage.setItem(DIMOP_KEY, "true"); } catch (e) {}
+      wrap.style.display = "none";
+      schedule();
+    });
+    wrap.appendChild(btn);
+  }
+
+  // A fomenu savja a fejlec <nav class="header-upper"> elemebe kerul (egyetlen navigacios szekcio).
+  function oneNav() {
+    var nav = D.querySelector("nav.header-upper"), ms = D.querySelector(".ms-mainnav");
+    if (!nav || !ms) return;
+    var bar = ms.closest("header > div > div");
+    if (!bar || nav.contains(bar)) return;
+    nav.classList.add("ms-onenav");
+    bar.classList.add("ms-onenav-bar");
+    nav.insertBefore(bar, nav.children[1] || null);   // logo | fomenu | nyelvvalaszto: egy sorban
+  }
+
   /* ======================================================== futtatas */
   function run() {
     try { skipLink(); } catch (e) { console.warn("[a11y] skipLink", e); }
-    try { mainNav(); } catch (e) { console.warn("[a11y] mainNav", e); }
+    try { dimopLogo(); } catch (e) { console.warn("[a11y] dimopLogo", e); }
+    try { drawerFooter(); } catch (e) { console.warn("[a11y] drawerFooter", e); }
+    try { usefulLinks(); } catch (e) { console.warn("[a11y] usefulLinks", e); }
+    try { mainNav(); oneNav(); } catch (e) { console.warn("[a11y] mainNav", e); }
     try { langMenu(); } catch (e) { console.warn("[a11y] langMenu", e); }
     try { landmarks(); } catch (e) { console.warn("[a11y] landmarks", e); }
     try { headings(); } catch (e) { console.warn("[a11y] headings", e); }

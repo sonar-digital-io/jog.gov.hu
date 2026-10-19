@@ -1,5 +1,5 @@
 /* mock-search.js
- * A jog.gov.hu "Mesterséges intelligencia alapú jogi információ kereső" mock
+ * A jog.gov.hu "Jogi mesterséges intelligencia alapú kereső" mock
  * implementációja: a kliensoldali web component (k2s-b2c) helyett egy önálló,
  * offline működő kereső + egy MOCK SERVICE, ami a rögzített kérdés→válasz
  * párokat szolgálja ki. A válaszoldal ugyanúgy épül fel, mint az élesen.
@@ -26,7 +26,8 @@
     var pageLang = (document.documentElement.getAttribute("lang") || "hu").toLowerCase().split("-")[0];
     var sel = lsGet("portal_selected_locale");
     if (pageLang === "hu" && sel && LOCALES.indexOf(sel) !== -1) {
-      location.replace("/" + sel + "/jogi-informacio-kereso" + location.search);
+      // a Kezdolap a valasztott nyelven (nem a Jogi MI kereso); mas oldalon a kereso oldal marad
+      location.replace(location.pathname.replace(/\/+$/, "") === "" ? "/" + sel + "/" : "/" + sel + "/jogi-informacio-kereso" + location.search);
       return;
     }
     function langOf(path) { var m = /^\/([a-z]{2})(\/|$)/.exec(path); return m && LOCALES.indexOf(m[1]) !== -1 ? m[1] : "hu"; }
@@ -53,8 +54,8 @@
    * torzsszovege nem magyar nyelven angol. */
   var LANG = ((document.documentElement.getAttribute("lang") || "hu").toLowerCase().split("-")[0]);
   var I18N = {
-    hu: { label: "Jogi kérdés", ph: "Keresés pl: Ki nyújthat be igényt közérdekű adat megismerésére?", search: "Keresés", clear: "keresőmező értékek törlése",
-          sw1: "Önkormányzati rendeletekben is keresne?", sw2: "Múltbeli időpontra vonatkozik a kérdése?", suggest: "Keresési javaslatok", pop: "Népszerű keresések", rec: "Legutóbbi kereséseim", samples: "Példakérdések",
+    hu: { label: "Kérdés", ph: "pl: Ki nyújthat be igényt közérdekű adat megismerésére?", search: "Keresés", clear: "keresőmező értékek törlése",
+          sw1: "Keresés önkormányzati rendeletekben", sw2: "Keresés időpont szerint", suggest: "Keresési javaslatok", pop: "Népszerű keresések", rec: "Legutóbbi kereséseim", samples: "Példakérdések",
           loading: "Válasz keresése a jogszabályokban…", none: "Erre a kérdésre nincs rögzített mock válasz. Próbálja a beállított kérdések egyikét.", thanks: "Köszönjük a visszajelzést!", loaded: "A válasz betöltődött.",
           ansLabel: "Országos jogszabályokon alapuló válasz:", ansId: "Válaszazonosító: ", disclaimer: "A válasz nem minősül hivatalos jogi tanácsadásnak.",
           fbTitle: "Hasznosnak találta a szolgáltatást?", fbText: "Segítsen nekünk, hogy még jobbá tegyük a választ!", up: "Hasznos volt", down: "Nem volt hasznos",
@@ -98,6 +99,65 @@
   };
   if (!I18N[LANG]) LANG = "en";
   var S = I18N[LANG];
+  /* ------------------------------------------- szuro-elemek adatai (megye / telepules) */
+  var MS_COUNTIES = [
+    ["Bács-Kiskun", ["Kecskemét", "Baja", "Kiskunfélegyháza", "Kalocsa"]], ["Baranya", ["Pécs", "Komló", "Mohács", "Szigetvár"]],
+    ["Békés", ["Békéscsaba", "Gyula", "Orosháza", "Szarvas"]], ["Borsod-Abaúj-Zemplén", ["Miskolc", "Ózd", "Kazincbarcika", "Sárospatak"]],
+    ["Budapest", ["Budapest"]], ["Csongrád-Csanád", ["Szeged", "Hódmezővásárhely", "Makó", "Szentes"]],
+    ["Fejér", ["Székesfehérvár", "Dunaújváros", "Mór", "Bicske"]], ["Győr-Moson-Sopron", ["Győr", "Sopron", "Mosonmagyaróvár", "Csorna"]],
+    ["Hajdú-Bihar", ["Debrecen", "Hajdúszoboszló", "Hajdúböszörmény", "Berettyóújfalu"]], ["Heves", ["Eger", "Gyöngyös", "Hatvan", "Heves"]],
+    ["Jász-Nagykun-Szolnok", ["Szolnok", "Jászberény", "Karcag", "Törökszentmiklós"]], ["Komárom-Esztergom", ["Tatabánya", "Esztergom", "Komárom", "Tata"]],
+    ["Nógrád", ["Salgótarján", "Balassagyarmat", "Pásztó", "Szécsény"]], ["Pest", ["Érd", "Szentendre", "Vác", "Gödöllő", "Cegléd"]],
+    ["Somogy", ["Kaposvár", "Siófok", "Marcali", "Nagyatád"]], ["Szabolcs-Szatmár-Bereg", ["Nyíregyháza", "Mátészalka", "Kisvárda", "Tiszavasvári"]],
+    ["Tolna", ["Szekszárd", "Paks", "Dombóvár", "Bonyhád"]], ["Vas", ["Szombathely", "Sárvár", "Körmend", "Kőszeg"]],
+    ["Veszprém", ["Veszprém", "Ajka", "Pápa", "Balatonfüred"]], ["Zala", ["Zalaegerszeg", "Nagykanizsa", "Keszthely", "Lenti"]]
+  ];
+  // a ket kapcsolo (es a hozzajuk tartozo szurok) ezen a lenyithato cim alatt van
+  var SETTINGS_TITLE = { hu: "Keresési beállítások", en: "Search settings", de: "Sucheinstellungen", fr: "Paramètres de recherche", es: "Ajustes de búsqueda", it: "Impostazioni di ricerca", zh: "搜索设置" };
+  var PRO_TEXT = {
+    hu: { label: "Szakmai kereső", tip: "Összefoglaló helyett a jogi dokumentumok listáját kapja, a bírósági határozatokkal és az indokolásokkal együtt.", info: "Információ a szakmai keresőről" },
+    en: { label: "Professional search", tip: "Instead of a summary, you get a list of legal documents, including court decisions and their reasoning.", info: "Information about the professional search" },
+    de: { label: "Fachsuche", tip: "Statt einer Zusammenfassung erhalten Sie eine Liste der Rechtsdokumente, einschließlich Gerichtsentscheidungen und deren Begründungen.", info: "Informationen zur Fachsuche" },
+    fr: { label: "Recherche professionnelle", tip: "Au lieu d’un résumé, vous obtenez la liste des documents juridiques, y compris les décisions de justice et leurs motifs.", info: "Informations sur la recherche professionnelle" },
+    es: { label: "Búsqueda profesional", tip: "En lugar de un resumen, recibe la lista de documentos jurídicos, incluidas las resoluciones judiciales y su motivación.", info: "Información sobre la búsqueda profesional" },
+    it: { label: "Ricerca professionale", tip: "Invece di un riepilogo, ottiene l’elenco dei documenti giuridici, comprese le decisioni giudiziarie e le relative motivazioni.", info: "Informazioni sulla ricerca professionale" },
+    zh: { label: "专业搜索", tip: "您将获得法律文件列表（包括法院裁判及其理由），而不是摘要。", info: "有关专业搜索的信息" }
+  };
+  // az eles kereso: 3 karakternel rovidebb kerdesre hibauzenet a mezo alatt (searchbox.feedback.minChar)
+  var MIN_CHARS = 3;
+  var MIN_CHAR_TEXT = { hu: "Legalább 3 karaktert adjon meg.", en: "Please enter at least 3 characters.", de: "Bitte geben Sie mindestens 3 Zeichen ein.", fr: "Veuillez saisir au moins 3 caractères.", es: "Introduzca al menos 3 caracteres.", it: "Inserire almeno 3 caratteri.", zh: "请至少输入3个字符。" };
+  // hangalapu bevitel (diktalas) a mezoben: Web Speech API; nem tamogatott bongeszoben a gomb rejtett
+  var MIC_TEXT = {
+    hu: { tip: "Diktálás", start: "Diktálás indítása", stop: "Diktálás leállítása", denied: "A mikrofon használata nem engedélyezett.", err: "A diktálás nem sikerült. Próbálja újra.", lang: "hu-HU" },
+    en: { tip: "Dictation", start: "Start dictation", stop: "Stop dictation", denied: "Microphone access is not allowed.", err: "Dictation failed. Please try again.", lang: "en-US" },
+    de: { tip: "Diktat", start: "Diktat starten", stop: "Diktat beenden", denied: "Der Mikrofonzugriff ist nicht erlaubt.", err: "Diktat fehlgeschlagen. Bitte versuchen Sie es erneut.", lang: "de-DE" },
+    fr: { tip: "Dictée", start: "Démarrer la dictée", stop: "Arrêter la dictée", denied: "L’accès au microphone n’est pas autorisé.", err: "La dictée a échoué. Veuillez réessayer.", lang: "fr-FR" },
+    es: { tip: "Dictado", start: "Iniciar dictado", stop: "Detener dictado", denied: "No se permite el acceso al micrófono.", err: "El dictado ha fallado. Inténtelo de nuevo.", lang: "es-ES" },
+    it: { tip: "Dettatura", start: "Avvia dettatura", stop: "Interrompi dettatura", denied: "L’accesso al microfono non è consentito.", err: "Dettatura non riuscita. Riprovare.", lang: "it-IT" },
+    zh: { tip: "语音输入", start: "开始语音输入", stop: "停止语音输入", denied: "不允许使用麦克风。", err: "语音输入失败，请重试。", lang: "zh-CN" }
+  };
+  var MIC = MIC_TEXT[LANG] || MIC_TEXT.en;
+  var IC_MIC = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M11.9998 3C10.3429 3 8.99976 4.34315 8.99976 6V10C8.99976 11.6569 10.3429 13 11.9998 13C13.6566 13 14.9998 11.6569 14.9998 10V6C14.9998 4.34315 13.6566 3 11.9998 3ZM11.9998 1C14.7612 1 16.9998 3.23858 16.9998 6V10C16.9998 12.7614 14.7612 15 11.9998 15C9.23833 15 6.99976 12.7614 6.99976 10V6C6.99976 3.23858 9.23833 1 11.9998 1ZM3.05469 11H5.07065C5.55588 14.3923 8.47329 17 11.9998 17C15.5262 17 18.4436 14.3923 18.9289 11H20.9448C20.4837 15.1716 17.1714 18.4839 12.9998 18.9451V23H10.9998V18.9451C6.82814 18.4839 3.51584 15.1716 3.05469 11Z" fill="#404753"/></svg>';
+  var PRO = PRO_TEXT[LANG] || PRO_TEXT.en;
+  // Egyetlen kereso: a "Szakmai kereso" kapcsolo (?szakmai=1) allitja a talalati modot; a regi
+  // /szakmai-jogi-informacio-kereso oldalak ide iranyitnak.
+  var SEARCH_PAGE = (LANG === "hu" ? "" : "/" + LANG) + "/jogi-informacio-kereso/";
+  var IS_PRO_PAGE = /\/szakmai-jogi-informacio-kereso(\/|$)/.test(location.pathname);
+  var INIT_PRO = IS_PRO_PAGE || new URLSearchParams(location.search).get("szakmai") === "1";
+  if (IS_PRO_PAGE) {
+    var qs = new URLSearchParams(location.search); qs.set("szakmai", "1");
+    location.replace(SEARCH_PAGE + "?" + qs.toString());
+  }
+  var FILTER_TEXT = {
+    hu: { county: "Megye", selCounty: "Válasszon megyét", settlement: "Település", selSettlement: "Válasszon települést", date: "Válasszon dátumot", dateLabel: "Dátum", countyRequired: "A megye megadása kötelező." },
+    en: { county: "County", selCounty: "Select a county", settlement: "Settlement", selSettlement: "Select a settlement", date: "Select a date", dateLabel: "Date", countyRequired: "Please select a county." },
+    de: { county: "Komitat", selCounty: "Komitat auswählen", settlement: "Ortschaft", selSettlement: "Ortschaft auswählen", date: "Datum auswählen", dateLabel: "Datum", countyRequired: "Bitte wählen Sie ein Komitat." },
+    fr: { county: "Comitat", selCounty: "Sélectionnez un comitat", settlement: "Localité", selSettlement: "Sélectionnez une localité", date: "Sélectionnez une date", dateLabel: "Date", countyRequired: "Veuillez sélectionner un comitat." },
+    es: { county: "Condado", selCounty: "Seleccione un condado", settlement: "Localidad", selSettlement: "Seleccione una localidad", date: "Seleccione una fecha", dateLabel: "Fecha", countyRequired: "Seleccione un condado." },
+    it: { county: "Contea", selCounty: "Seleziona una contea", settlement: "Località", selSettlement: "Seleziona una località", date: "Seleziona una data", dateLabel: "Data", countyRequired: "Selezionare una contea." },
+    zh: { county: "县", selCounty: "选择县", settlement: "城镇", selSettlement: "选择城镇", date: "选择日期", dateLabel: "日期", countyRequired: "请选择县。" }
+  };
+
   var PREFIX = LANG === "hu" ? "" : "/" + LANG;
 
   /* ---------------------------------------------------------------- ikonok */
@@ -125,7 +185,8 @@
     "A főbérlő azt mondta, két héten belül költözzek ki, pedig van érvényes bérleti szerződésem. Megteheti ezt, és mit tudok csinálni?",
     "Vettem egy mosógépet, két hónap után elromlott. A bolt azt mondja, nem az ő hibájuk. Mit kérhetek tőlük, és meddig?",
     "Hol kell adóznom, ha Magyarországon dolgozom, de külföldi lakcímmel rendelkezem?",
-    "Most kaptam felmondást a munkahelyemen. Mennyi a felmondási időm, és mit kell tennem, ha nem értek vele egyet?"
+    "Most kaptam felmondást a munkahelyemen. Mennyi a felmondási időm, és mit kell tennem, ha nem értek vele egyet?",
+    "Milyen bírósági gyakorlat alakult ki a munkáltatói felmondás indokának valóságával és okszerűségével kapcsolatban?"
   ];
 
   var CITE_HREF = "https://njt.hu/";
@@ -211,6 +272,42 @@
         { ref: "106/1999. (XII. 28.) FVM rendelet 3. §, 5. §", desc: "a lakások és helyiségek bérletére, valamint az elidegenítésükre vonatkozó egyes szabályokról szóló 1993. évi LXXVIII. törvény végrehajtásáról" },
         { ref: "1994. évi LIII. törvény 183/A. §, 154/A. §", desc: "a bírósági végrehajtásról" }
       ]
+    },
+    {
+      // PELDA a "Szakmai kereso" kapcsolo teszteleséhez (a regi szakmai oldal "Legutobbi kereseim" listajabol)
+      id: "7c1e5a52-0b3d-4f6e-9a8e-3d2f6b0c4e11",
+      question: "Milyen bírósági gyakorlat alakult ki a munkáltatói felmondás indokának valóságával és okszerűségével kapcsolatban?",
+      keywords: ["bírósági gyakorlat", "felmondás indok", "indokának valóság", "okszerűség", "munkaügyi bíróság"],
+      blocks: [
+        { t: "p", cite: true, html: 'A munkáltatói rendes felmondást <strong>indokolni kell</strong>, az indokolásból az indoknak világosan ki kell tűnnie, és annak <strong>valósnak és okszerűnek</strong> kell lennie (Mt. 64. §).' },
+        { t: "lead", html: 'A bírósági gyakorlat főbb elemei:' },
+        { t: "ul", items: [
+          { html: 'Az indok <strong>valóságát és okszerűségét a munkáltatónak kell bizonyítania</strong>.', cite: true },
+          { html: 'A bíróság a felmondás jogszerűségét <strong>kizárólag a közölt indok alapján</strong> vizsgálja, az indok utóbb nem pótolható és nem cserélhető ki.', cite: true },
+          { html: 'Az indokolásnak <strong>konkrétnak</strong> kell lennie: általános megfogalmazás (pl. „átszervezés”) nem elegendő.', cite: true }
+        ]}
+      ],
+      laws: [
+        { ref: "2012. évi I. törvény 64. §, 65. §", desc: "a munka törvénykönyvéről" },
+        { ref: "2012. évi I. törvény 82. §, 83. §", desc: "a munka törvénykönyvéről" }
+      ],
+      // szakmai nezet (Szakmai kereso kapcsolo): dokumentumlistak fulenkent. Peldaadatok teszteleshez.
+      pro: {
+        legislation: [
+          { title: "2012. évi I. törvény 64. §", meta: "Jogszabály · a munka törvénykönyvéről", text: "A munkáltató felmondását indokolni kell; az indokolásnak valósnak és okszerűnek kell lennie." },
+          { title: "2012. évi I. törvény 65. §", meta: "Jogszabály · a munka törvénykönyvéről", text: "A munkáltatói felmondás indoka a munkavállaló képességével, magatartásával vagy a munkáltató működésével összefüggő ok lehet." },
+          { title: "2012. évi I. törvény 82. §, 83. §", meta: "Jogszabály · a munka törvénykönyvéről", text: "A munkaviszony jogellenes megszüntetésének jogkövetkezményei, kártérítés és a munkaviszony helyreállítása." }
+        ],
+        court: [
+          { title: "Munkaügyi bírósági határozat – az indok valóságának bizonyítása", meta: "Bírósági határozat · példaadat", text: "A munkáltatót terheli annak bizonyítása, hogy a felmondásban megjelölt indok valós és okszerű volt." },
+          { title: "Munkaügyi bírósági határozat – az indok pótlásának tilalma", meta: "Bírósági határozat · példaadat", text: "A felmondás jogszerűsége kizárólag a felmondásban közölt indok alapján bírálható el, az indok utóbb nem módosítható." },
+          { title: "Munkaügyi bírósági határozat – az indokolás konkrétsága", meta: "Bírósági határozat · példaadat", text: "Az általános, tartalmilag ki nem fejtett indok nem felel meg a világos és konkrét indokolás követelményének." }
+        ],
+        reasons: [
+          { title: "A munka törvénykönyvéről szóló törvény 64. §-ához fűzött indokolás", meta: "Törvényjavaslati indokolás · példaadat", text: "Az indokolás a felmondás indokával szemben támasztott követelményeket (világosság, valóság, okszerűség) rögzíti." }
+        ],
+        notices: []
+      }
     }
   ];
 
@@ -327,7 +424,7 @@
   };
   if (LANG !== "hu") {
     var qs = Q_I18N[LANG] || Q_I18N.en;
-    ANSWERS = ANSWERS.map(function (a, i) {
+    ANSWERS = ANSWERS.slice(0, qs.length).map(function (a, i) {
       return { id: a.id, question: qs[i][0], keywords: qs[i][1].concat(Q_I18N.en[i][1]), blocks: EN_BODIES[i].blocks, laws: EN_BODIES[i].laws };
     });
     // az eles forditott oldalakon nincsenek "nepszeru/legutobbi" javaslatok;
@@ -403,24 +500,80 @@
             '</div>' +
             '<div class="ms-answer-id"><span class="ms-sr-only">' + S.ansId + '</span>' + a.id + '</div>' +
           '</div>' +
-          '<div class="ms-answer-body">' + renderBlocks(a.blocks) + '</div>' +
           '<div class="ms-disclaimer">' + IC.warn + '<span>' + S.disclaimer + '</span></div>' +
-          '<hr class="ms-sep">' +
-          '<div class="ms-feedback">' +
-            '<h2 class="ms-feedback-title" id="ms-feedback-title">' + S.fbTitle + '</h2>' +
-            '<p>' + S.fbText + '</p>' +
-            '<div class="ms-thumbs" role="group" aria-labelledby="ms-feedback-title">' +
-              '<button class="ms-thumb" type="button" aria-pressed="false" aria-label="' + S.up + '">' + IC.up + '</button>' +
-              '<button class="ms-thumb" type="button" aria-pressed="false" aria-label="' + S.down + '">' + IC.down + '</button>' +
-            '</div>' +
+          '<div class="ms-answer-body">' + renderBlocks(a.blocks) + '</div>' +
+          '<div class="ms-laws-section">' +
+            '<h2 class="ms-laws-title">' + S.laws + '</h2>' +
+            lawsHtml +
           '</div>' +
         '</div>' +
-        '<div class="ms-side">' +
-          '<div class="ms-info">' + IC.info + '<span>' + S.info + '</span></div>' +
-          '<h2 class="ms-laws-title">' + S.laws + '</h2>' +
-          lawsHtml +
+        '<div class="ms-feedback">' +
+          '<h2 class="ms-feedback-title" id="ms-feedback-title">' + S.fbTitle + '</h2>' +
+          '<p>' + S.fbText + '</p>' +
+          '<div class="ms-thumbs" role="group" aria-labelledby="ms-feedback-title">' +
+            '<button class="ms-thumb" type="button" aria-pressed="false" aria-label="' + S.up + '">' + IC.up + '</button>' +
+            '<button class="ms-thumb" type="button" aria-pressed="false" aria-label="' + S.down + '">' + IC.down + '</button>' +
+          '</div>' +
         '</div>' +
+
       '</div>';
+  }
+
+  /* ------------------------------------------- szakmai nezet (Szakmai kereso kapcsolo)
+   * Az osszefoglalo helyett dokumentumlistak, fulenkent (az eles B2B talalati oldal mintajara):
+   * jogszabalyok, birosagi hatarozatok, indokolasok, hivatalos ertesitok. */
+  var PRO_VIEW = {
+    hu: { title: "Szakmai találatok", tabs: ["Jogszabályok", "Bírósági határozatok", "Indokolások", "Hivatalos értesítők"], none: "Ebben a kategóriában nincs találat." },
+    en: { title: "Professional results", tabs: ["Legislation", "Court decisions", "Statements of reasons", "Official notices"], none: "No results in this category." },
+    de: { title: "Fachergebnisse", tabs: ["Rechtsvorschriften", "Gerichtsentscheidungen", "Begründungen", "Amtliche Mitteilungen"], none: "Keine Ergebnisse in dieser Kategorie." },
+    fr: { title: "Résultats professionnels", tabs: ["Législation", "Décisions de justice", "Exposés des motifs", "Avis officiels"], none: "Aucun résultat dans cette catégorie." },
+    es: { title: "Resultados profesionales", tabs: ["Legislación", "Resoluciones judiciales", "Exposiciones de motivos", "Avisos oficiales"], none: "Sin resultados en esta categoría." },
+    it: { title: "Risultati professionali", tabs: ["Legislazione", "Decisioni giudiziarie", "Relazioni illustrative", "Avvisi ufficiali"], none: "Nessun risultato in questa categoria." },
+    zh: { title: "专业结果", tabs: ["法律法规", "法院裁判", "立法理由", "官方公告"], none: "此类别中没有结果。" }
+  };
+  function renderPro(a) {
+    var V = PRO_VIEW[LANG] || PRO_VIEW.en;
+    var pro = a.pro || {
+      legislation: a.laws.map(function (l) { return { title: l.ref, meta: V.tabs[0] + " · " + l.desc, text: "" }; }),
+      court: [], reasons: [], notices: []
+    };
+    var lists = [pro.legislation, pro.court, pro.reasons, pro.notices];
+    var tabs = V.tabs.map(function (t, i) {
+      return '<button type="button" role="tab" class="ms-pro-tab" id="ms-pro-tab-' + i + '" aria-controls="ms-pro-panel-' + i + '" aria-selected="' + (i === 0 ? "true" : "false") +
+             '" tabindex="' + (i === 0 ? "0" : "-1") + '">' + t + ' <span class="ms-pro-count">' + lists[i].length + '</span></button>';
+    }).join("");
+    var panels = lists.map(function (docs, i) {
+      var body = docs.length ? '<ul class="ms-pro-list">' + docs.map(function (d) {
+        return '<li class="ms-pro-doc"><a class="ms-pro-doc-title" href="' + CITE_HREF + '" target="_blank" rel="noopener">' + d.title +
+               '<span class="ms-sr-only">' + S.newWin + '</span></a><div class="ms-pro-doc-meta">' + d.meta + '</div>' +
+               (d.text ? '<p class="ms-pro-doc-text">' + d.text + '</p>' : '') + '</li>';
+      }).join("") + '</ul>' : '<p class="ms-pro-none">' + V.none + '</p>';
+      return '<div role="tabpanel" class="ms-pro-panel" id="ms-pro-panel-' + i + '" aria-labelledby="ms-pro-tab-' + i + '"' + (i === 0 ? "" : " hidden") + ' tabindex="0">' + body + '</div>';
+    }).join("");
+    return '<div class="ms-pro">' +
+      '<div class="ms-answer-head"><div class="ms-head-badge"><div class="ms-owl">' + IC.owl + '</div>' +
+      '<h2 class="ms-answer-label" id="ms-answer-title" tabindex="-1">' + V.title + '</h2></div></div>' +
+      '<div class="ms-disclaimer">' + IC.warn + '<span>' + S.disclaimer + '</span></div>' +
+      '<div class="ms-pro-tabs" role="tablist" aria-label="' + V.title + '">' + tabs + '</div>' + panels + '</div>';
+  }
+  function initProTabs(root) {
+    var tabs = Array.prototype.slice.call(root.querySelectorAll(".ms-pro-tab"));
+    function select(i, focus) {
+      tabs.forEach(function (t, j) {
+        t.setAttribute("aria-selected", j === i ? "true" : "false");
+        t.tabIndex = j === i ? 0 : -1;
+        root.querySelector("#" + t.getAttribute("aria-controls")).hidden = j !== i;
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(i, false); });
+      t.addEventListener("keydown", function (e) {
+        var n = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i - 1 + tabs.length) % tabs.length :
+                e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1;
+        if (n >= 0) { e.preventDefault(); select(n, true); }
+      });
+    });
   }
 
   /* ------------------------------------------------------------------ vezérlés */
@@ -430,8 +583,16 @@
     var barMount = document.getElementById("mock-search-bar");
     var resMount = document.getElementById("mock-search-results");
     if (!barMount) return;
-    // resMount hiánya = "csak searchbar" mód (pl. kezdőlap) -> átirányítás a találati oldalra
-    var redirectMode = !resMount;
+    // resMount hiánya = kezdőlap: nincs átirányítás, a találatok ugyanitt, a hero alatt töltődnek be
+    var isHome = !resMount;
+    if (isHome) {
+      var mainEl = document.querySelector("main");
+      resMount = document.createElement("div");
+      resMount.id = "mock-search-results";
+      resMount.className = "pt-(--dds-spacing-1200) px-(--dds-spacing-400) flex flex-col";
+      (mainEl || barMount.parentNode).appendChild(resMount);
+    }
+    var redirectMode = false;
 
     // A searchbar a design system VALÓDI komponenseibol epul (dap-ds-textarea,
     // dap-ds-icon-button, dap-ds-switch) -> pontosan ugy nez ki, mint elesen.
@@ -450,24 +611,35 @@
         '</div>';
     }
     barMount.innerHTML =
-      '<div class="ms-searchbar-wrap' + (redirectMode ? ' ms-on-dark' : '') + '">' +
+      '<div class="ms-searchbar-wrap' + (isHome ? ' ms-on-dark' : '') + '">' +
         '<div class="ms-searchbar-ds">' +
           '<label class="ms-label" id="ms-label">' + S.label + '</label>' +
           '<dap-ds-textarea class="ms-input-ds" size="lg" subtle hidecounter ' +
             'placeholder="' + attr(S.ph) + '"></dap-ds-textarea>' +
           '<div class="ms-actions">' +
             '<dap-ds-icon-button class="ms-clear-ds" aria-label="' + S.clear + '" variant="subtle" size="md" icon="close-line" style="display:none"></dap-ds-icon-button>' +
-            '<dap-ds-icon-button class="ms-search-ds" aria-label="' + S.search + '" variant="brand" size="md" icon="search-line"></dap-ds-icon-button>' +
+            '<dap-ds-icon-button class="ms-mic-ds" data-tip="' + attr(MIC.tip) + '" aria-label="' + MIC.start + '" variant="brand" size="md"><dap-ds-icon size="md">' + IC_MIC + '</dap-ds-icon></dap-ds-icon-button>' +
+            '<dap-ds-icon-button class="ms-search-ds" data-tip="' + attr(S.search) + '" aria-label="' + S.search + '" variant="brand" size="md" icon="search-line"></dap-ds-icon-button>' +
           '</div>' +
           '<div class="ms-suggest" id="ms-suggest-panel" role="group" aria-label="' + S.suggest + '">' +
             (POPULAR.length ? suggestCol(IC_TREND, S.pop, POPULAR, "ms-suggest-pop") : "") +
             suggestCol(IC_HIST, LANG === "hu" ? S.rec : S.samples, RECENT, "ms-suggest-rec") +
           '</div>' +
         '</div>' +
-        '<div class="ms-toggles-ds">' +
-          '<dap-ds-switch size="xs" name="municipality" label="' + attr(S.sw1) + '"></dap-ds-switch>' +
-          '<dap-ds-switch size="xs" name="timemachine" label="' + attr(S.sw2) + '"></dap-ds-switch>' +
-        '</div>' +
+        '<details class="ms-settings">' +
+          '<summary class="ms-settings-summary">' + (SETTINGS_TITLE[LANG] || SETTINGS_TITLE.en) + '</summary>' +
+          '<div class="ms-toggles-ds">' +
+            '<div class="ms-pro-row">' +
+              '<dap-ds-switch size="xs" name="professional" label="' + attr(PRO.label) + '"></dap-ds-switch>' +
+              '<dap-ds-tooltip class="ms-info-tip" content="' + attr(PRO.tip) + '" placement="right" floatingStrategy="fixed">' +
+                '<dap-ds-icon-button slot="trigger" clean size="xs" iconSize="16" aria-label="' + attr(PRO.info) + '">' +
+                  '<dap-ds-icon name="information-line" aria-hidden="true"></dap-ds-icon></dap-ds-icon-button>' +
+              '</dap-ds-tooltip>' +
+            '</div>' +
+            '<dap-ds-switch size="xs" name="municipality" label="' + attr(S.sw1) + '"></dap-ds-switch>' +
+            '<dap-ds-switch size="xs" name="timemachine" label="' + attr(S.sw2) + '"></dap-ds-switch>' +
+          '</div>' +
+        '</details>' +
         '<div class="ms-sr-only" id="ms-status" role="status" aria-live="polite" aria-atomic="true"></div>' +
       '</div>';
     // a javaslat-gombok szövegét textContent-tel toltjuk fel (biztonsagos)
@@ -487,10 +659,37 @@
       setTimeout(function () { st.textContent = msg; }, 60);
     }
 
+    var filterGuard = null;
     function run(getVal) {
       var q = (getVal() || "").trim();
-      if (!q) return;
-      if (redirectMode) { location.assign(RESULTS_PAGE + "?q=" + encodeURIComponent(q)); return; }
+      var taEl = barMount.querySelector(".ms-input-ds");
+      if (q.length < MIN_CHARS) {
+        if (taEl) {
+          var msg0 = MIN_CHAR_TEXT[LANG] || MIN_CHAR_TEXT.en;
+          taEl.setAttribute("feedbackType", "negative");
+          taEl.setAttribute("feedback", msg0);
+          announce(msg0);
+          if (!taEl.__minCharBound) {
+            taEl.__minCharBound = true;
+            taEl.addEventListener("dds-input", function () { taEl.removeAttribute("feedback"); });
+          }
+          var inp = taEl.shadowRoot && taEl.shadowRoot.querySelector("textarea"); if (inp) inp.focus();
+        }
+        return;
+      }
+      if (taEl) taEl.removeAttribute("feedback");
+      if (filterGuard && !filterGuard()) return;
+      // "Szakmai kereso" kapcsolo: dokumentumlista (szakmai oldal) az osszefoglalo helyett
+      var proSw = barMount.querySelector('dap-ds-switch[name="professional"]');
+      var wantPro = !!(proSw && (proSw.__touched ? proSw.checked : INIT_PRO));   // erintes nelkul az URL szerinti mod
+      if (redirectMode) { location.assign(RESULTS_PAGE + "?q=" + encodeURIComponent(q) + (wantPro ? "&szakmai=1" : "")); return; }
+      resMount.setAttribute("data-mode", wantPro ? "professional" : "summary");
+      try {   // az URL kovesse a kapcsolot (frissitesre / megosztasra ugyanaz a mod)
+        var u2 = new URL(location.href);
+        u2.searchParams.set("q", q);
+        if (wantPro) u2.searchParams.set("szakmai", "1"); else u2.searchParams.delete("szakmai");
+        history.replaceState(history.state, "", u2.pathname + u2.search);
+      } catch (e) {}
       resMount.setAttribute("aria-busy", "true");
       announce(S.loading);
       resMount.innerHTML = '<div class="ms-results"><div class="ms-loading"><span class="ms-spinner" aria-hidden="true"></span>' + S.loading + '</div></div>';
@@ -504,9 +703,10 @@
         }
         var wrap = document.createElement("div");
         wrap.className = "ms-results";
-        wrap.innerHTML = renderAnswer(a);
+        wrap.innerHTML = wantPro ? renderPro(a) : renderAnswer(a);
         resMount.innerHTML = "";
         resMount.appendChild(wrap);
+        if (wantPro) initProTabs(wrap);
         wrap.querySelectorAll(".ms-thumb").forEach(function (btn) {
           btn.addEventListener("click", function () {
             wrap.querySelectorAll(".ms-thumb").forEach(function (b) { b.classList.remove("is-active"); b.setAttribute("aria-pressed", "false"); });
@@ -565,6 +765,44 @@
         else { try { ta.value = v; } catch (e) {} }
       }
       function refreshClear() { if (clearBtn) clearBtn.style.display = getVal().trim() ? "" : "none"; }
+
+      // ---- Diktalas (mikrofon gomb) ----
+      var micBtn = barMount.querySelector(".ms-mic-ds");
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (micBtn && !SR) { micBtn.style.display = "none"; micBtn = null; }
+      if (micBtn) {
+        labelIconBtn(micBtn, MIC.start);
+        var rec = null, listening = false, baseText = "";
+        var micInner = function () { return micBtn.shadowRoot && micBtn.shadowRoot.querySelector("button"); };
+        var setListening = function (on) {
+          listening = on;
+          micBtn.classList.toggle("is-listening", on);
+          var b = micInner();
+          if (b) { b.setAttribute("aria-pressed", on ? "true" : "false"); b.setAttribute("aria-label", on ? MIC.stop : MIC.start); }
+          micBtn.setAttribute("aria-label", on ? MIC.stop : MIC.start);
+        };
+        var micError = function (msg) {
+          ta.setAttribute("feedbackType", "negative"); ta.setAttribute("feedback", msg); announce(msg);
+        };
+        micBtn.addEventListener("click", function () {
+          if (listening && rec) { try { rec.stop(); } catch (e) {} return; }
+          ta.removeAttribute("feedback");
+          rec = new SR();
+          rec.lang = MIC.lang; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+          baseText = getVal().replace(/\s+$/, "");
+          rec.onresult = function (ev) {
+            var t = "";
+            for (var i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
+            setVal((baseText ? baseText + " " : "") + t.trim());
+          };
+          rec.onerror = function (ev) {
+            if (ev.error === "not-allowed" || ev.error === "service-not-allowed") micError(MIC.denied);
+            else if (ev.error !== "no-speech" && ev.error !== "aborted") micError(MIC.err);
+          };
+          rec.onend = function () { setListening(false); refreshClear(); (inner || ta).focus(); };
+          try { rec.start(); setListening(true); } catch (e) { setListening(false); }
+        });
+      }
 
       var wrap = barMount.querySelector(".ms-searchbar-wrap");
       var suggest = barMount.querySelector(".ms-suggest");
@@ -639,6 +877,8 @@
       // switch hover háttér (a dds nem ad rá változót -> a shadow DOM-ba injektáljuk)
       var swHover = ".switch:hover .input__control{background-color:#404753!important}" +
                     ".switch:hover .input__control--checked{background-color:#a9ebdc!important}" +
+                    // bekapcsolt allapotban a kapcsolo "gombja" sotetzold (#0B3D3E) a feher helyett
+                    ".input__control--checked .input__control-toggle-thumb{color:#0B3D3E!important;fill:#0B3D3E!important}" +
                     // vilagos hatteren (talalati oldal) a DS #37f0bf fokuszgyuruje ~1,4:1 -> sotet gyuru (2.4.7, 1.4.11)
                     "";
       barMount.querySelectorAll("dap-ds-switch").forEach(function (s) {
@@ -653,6 +893,100 @@
         if (s.shadowRoot) inject();
         else if (window.customElements) customElements.whenDefined("dap-ds-switch").then(function () { setTimeout(inject, 30); });
       });
+
+      // Szuro-elemek a kapcsolok ALATT (az eles kereso szerint):
+      //  - "Onkormanyzati rendeletekben is keresne?" -> megye (kotelezo) + telepules valaszto
+      //    (dap-ds-combobox, a telepules a megyere szukul, telepulesvalasztas beallitja a megyet);
+      //  - "Multbeli idopontra vonatkozik a kerdese?" -> datumvalaszto (dap-ds-datepicker, max. +10 ev).
+      // Kikapcsolva az elemek elrejtodnek es az ertekuk torlodik.
+      var pro = barMount.querySelector('dap-ds-switch[name="professional"]');
+      if (pro) pro.addEventListener("dds-change", function () { pro.__touched = true; });
+      if (pro && INIT_PRO) customElements.whenDefined("dap-ds-switch").then(function () { pro.checked = true; pro.setAttribute("checked", ""); });
+      var muni = barMount.querySelector('dap-ds-switch[name="municipality"]');
+      var tm = barMount.querySelector('dap-ds-switch[name="timemachine"]');
+      var togglesBox = barMount.querySelector(".ms-toggles-ds");
+      if (muni && tm && togglesBox) {
+        var T = FILTER_TEXT[LANG] || FILTER_TEXT.en;
+        var box = document.createElement("div");
+        box.className = "ms-filters-ds";
+        togglesBox.parentNode.insertBefore(box, togglesBox.nextSibling);
+        // a felirat ugyanaz a .ms-label, mint a "Jogi kerdes" mezonel (szin, meret, vastagsag)
+        var fid = 0;
+        var mk = function (tag, cls, text) {
+          var w = document.createElement("div"), l = document.createElement("label"), e = document.createElement(tag);
+          w.className = "ms-field"; w.hidden = true;
+          l.className = "ms-label"; l.id = "ms-flabel-" + (++fid); l.textContent = text;
+          e.className = cls; e.setAttribute("aria-labelledby", l.id); e.setAttribute("aria-label", text);
+          l.addEventListener("click", function () { var i = e.shadowRoot && e.shadowRoot.querySelector("input"); if (i) i.focus(); });
+          w.appendChild(l); w.appendChild(e); box.appendChild(w);
+          return e;
+        };
+        var show = function (el, on) { el.parentNode.hidden = !on; };
+        var county = mk("dap-ds-combobox", "ms-county-ds", T.county), settle = mk("dap-ds-combobox", "ms-settlement-ds", T.settlement), dp = mk("dap-ds-datepicker", "ms-datepicker-ds", T.dateLabel);
+        var countyId = "", settleId = "";
+        [[county, T.county, T.selCounty], [settle, T.settlement, T.selSettlement]].forEach(function (c) {
+          c[0].setAttribute("name", c[0] === county ? "county-combobox" : "settlement-combobox");
+          c[0].setAttribute("placeholder", c[2]);
+          c[0].setAttribute("size", "sm");
+          c[0].setAttribute("searchmode", "autocomplete");
+          c[0].setAttribute("openOnEmpty", "false");
+          c[0].setAttribute("selectable", "false");
+          c[0].setAttribute("feedbackType", "negative");
+        });
+        var opts = function (el, items) {
+          el.textContent = "";
+          items.forEach(function (it) { var o = document.createElement("dap-ds-option-item"); o.setAttribute("value", it[0]); o.textContent = it[1]; el.appendChild(o); });
+        };
+        var allSettlements = [];
+        MS_COUNTIES.forEach(function (c, ci) { c[1].forEach(function (t, ti) { allSettlements.push([ci + "-" + ti, t, String(ci)]); }); });
+        var fillSettle = function () {
+          opts(settle, allSettlements.filter(function (t) { return countyId === "" || t[2] === countyId; }).map(function (t) { return [t[0], t[1]]; }));
+        };
+        opts(county, MS_COUNTIES.map(function (c, i) { return [String(i), c[0]]; }));
+        fillSettle();
+        var dl = T.date;
+        dp.setAttribute("size", "sm"); dp.setAttribute("placeholder", dl); dp.setAttribute("locale", LANG);
+        var max = new Date(); max.setFullYear(max.getFullYear() + 10);
+        customElements.whenDefined("dap-ds-datepicker").then(function () { dp.maxDate = max; });
+        var val = function (e) { return e && e.detail && e.detail.value != null ? String(e.detail.value) : ""; };
+        county.addEventListener("dds-change", function (e) {
+          countyId = val(e);
+          county.removeAttribute("feedback");
+          if (settleId && settleId.split("-")[0] !== countyId) { settleId = ""; try { settle.value = undefined; } catch (x) {} }
+          fillSettle();
+        });
+        county.addEventListener("dds-clear", function () { countyId = ""; fillSettle(); });
+        settle.addEventListener("dds-change", function (e) {
+          settleId = val(e);
+          if (settleId) { countyId = settleId.split("-")[0]; try { county.value = countyId; } catch (x) {} county.removeAttribute("feedback"); fillSettle(); }
+        });
+        settle.addEventListener("dds-clear", function () { settleId = ""; });
+        muni.addEventListener("dds-change", function (e) {
+          var on = e && e.detail && typeof e.detail.checked === "boolean" ? e.detail.checked : !!muni.checked;
+          show(county, on); show(settle, on);
+          if (!on) {
+            countyId = settleId = ""; county.removeAttribute("feedback");
+            try { county.value = undefined; settle.value = undefined; } catch (x) {}
+            fillSettle();
+          }
+        });
+        tm.addEventListener("dds-change", function (e) {
+          var on = e && e.detail && typeof e.detail.checked === "boolean" ? e.detail.checked : !!tm.checked;
+          show(dp, on);
+          if (on) { setTimeout(function () { var i = dp.shadowRoot && dp.shadowRoot.querySelector("input"); if (i) i.focus(); }, 60); }
+          else { try { dp.value = undefined; } catch (x) {} }
+        });
+        // a megye kotelezo, ha az onkormanyzati kapcsolo be van kapcsolva (eles: validation.field.countyRequired)
+        filterGuard = function () {
+          if (muni.checked && countyId === "") {
+            var det = box.closest("details"); if (det) det.open = true;   // a hibauzenet latszodjon
+            county.setAttribute("feedback", T.countyRequired);
+            var i = county.shadowRoot && county.shadowRoot.querySelector("input"); if (i) i.focus(); else county.focus();
+            return false;
+          }
+          return true;
+        };
+      }
 
       if (!redirectMode) {
         try {

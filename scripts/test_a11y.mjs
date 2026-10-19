@@ -103,7 +103,7 @@ try {
     check(!errors.some(e => e.startsWith('[a11y]')), 'az a11y-fixes.js hiba nelkul fut', errors.find(e => e.startsWith('[a11y]')));
     const st = await page.evaluate(() => ({
       skip: !!document.querySelector('body > a.skip-to-content'),
-      nav: !!document.querySelector('nav.ms-mainnav[aria-label]') && document.querySelector('nav.ms-mainnav').getAttribute('aria-label') === ({ hu: 'Főmenü', en: 'Main menu', de: 'Hauptmenü', zh: '主菜单' }[document.documentElement.lang.slice(0, 2)] || document.querySelector('nav.ms-mainnav').getAttribute('aria-label')),
+      nav: !!document.querySelector('nav.header-upper[aria-label]') && !!document.querySelector('nav.header-upper .ms-mainnav') && document.querySelector('nav.header-upper').getAttribute('aria-label') === ({ hu: 'Főmenü', en: 'Main menu', de: 'Hauptmenü', zh: '主菜单' }[document.documentElement.lang.slice(0, 2)] || document.querySelector('nav.header-upper').getAttribute('aria-label')),
       dsHidden: [...document.querySelectorAll('nav > dap-ds-navigation-menu.main-navigation')].every(d => getComputedStyle(d.parentElement).display === 'none'),
     }));
     check(st.skip, 'ugro link a renderelt DOM-ban');
@@ -129,16 +129,16 @@ try {
     console.log('\n--- fomenu billentyuzettel: ' + url + ' ---');
     const { page } = await open(url, { dismissBanner: true });
     await page.evaluate(() => document.activeElement && document.activeElement.blur());
-    const want = await page.evaluate(() => [...document.querySelectorAll('nav.ms-mainnav .ms-mainnav-list > li > .ms-nav-link')].map(a => a.textContent.trim()));
+    const want = await page.evaluate(() => [...document.querySelectorAll('div.ms-mainnav .ms-mainnav-list > li > .ms-nav-link')].map(a => a.textContent.trim()));
     const got = new Set();
     for (let i = 0; i < 30; i++) {
       await page.keyboard.press('Tab');
-      const t = await page.evaluate(() => document.activeElement.closest('nav.ms-mainnav') ? document.activeElement.textContent.trim() : null);
+      const t = await page.evaluate(() => document.activeElement.closest('div.ms-mainnav') ? document.activeElement.textContent.trim() : null);
       if (t) got.add(t);
     }
     want.forEach(w => check(got.has(w), 'Tabbal elerheto: ' + w));
 
-    const ag = page.locator('nav.ms-mainnav .ms-sub-trigger').first();
+    const ag = page.locator('div.ms-mainnav .ms-sub-trigger').first();
     await ag.focus(); await page.keyboard.press(' '); await page.waitForTimeout(200);
     check(await ag.getAttribute('aria-expanded') === 'true', 'Space kinyitja az "Agazati kozlonyok" almenut');
     check(/Ágazati közlönyök/.test(await page.evaluate(ACTIVE)), 'a fokusz az elso alpontra kerul', await page.evaluate(ACTIVE));
@@ -149,15 +149,15 @@ try {
     check(await ag.getAttribute('aria-expanded') === 'false' && /Ágazati közlönyök/.test(await page.evaluate(ACTIVE)), 'Escape zar es visszaadja a fokuszt');
     check(await page.evaluate(() => { const id = document.querySelector('.ms-sub-trigger').getAttribute('aria-controls'); return !!document.getElementById(id); }), 'aria-controls letezo panelre mutat');
 
-    const hz = page.locator('nav.ms-mainnav button.ms-sub-trigger');
+    const hz = page.locator('div.ms-mainnav button.ms-sub-trigger');
     await hz.focus(); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
     check(await hz.getAttribute('aria-expanded') === 'true', 'Enter kinyitja a "Hasznos linkek" almenut');
     check(/új ablakban/.test(await page.evaluate(ACTIVE)), 'a kulso link neve jelzi az uj ablakot', await page.evaluate(ACTIVE));
     await page.keyboard.press('Escape');
 
     await page.mouse.move(5, 700);
-    await page.locator('nav.ms-mainnav li.ms-has-sub').nth(1).hover(); await page.waitForTimeout(250);
-    const visible = () => page.evaluate(() => getComputedStyle(document.querySelectorAll('nav.ms-mainnav .ms-submenu')[1]).visibility);
+    await page.locator('div.ms-mainnav li.ms-has-sub').nth(1).hover(); await page.waitForTimeout(250);
+    const visible = () => page.evaluate(() => getComputedStyle(document.querySelectorAll('div.ms-mainnav .ms-submenu')[1]).visibility);
     const before = await visible();
     await page.keyboard.press('Escape'); await page.waitForTimeout(250);
     check(before === 'visible' && await visible() === 'hidden', 'hoverrel nyitott almenu Escape-re eltunik (1.4.13)');
@@ -230,7 +230,7 @@ try {
       await page.waitForFunction(() => window.__a11yFixesReady === true, null, { timeout: 20000 }).catch(() => {});
       check(/^\/en\//.test(new URL(page.url()).pathname) && !bad.length, 'YES utan az angol oldal betolt (nincs 404)', page.url().replace(BASE, '') + ' ' + bad.join(', '));
       check(await page.evaluate(() => document.documentElement.lang === 'en' && /146/.test(document.querySelector('main').innerText)), 'az angol oldalon is a 146. szam latszik');
-      check(await page.evaluate(() => document.querySelector('.skip-to-content').textContent === 'Skip to main content' && document.querySelector('nav.ms-mainnav').getAttribute('aria-label') === 'Main menu'), 'az ugro link es a fomenu neve angolul');
+      check(await page.evaluate(() => document.querySelector('.skip-to-content').textContent === 'Skip to main content' && document.querySelector('div.ms-mainnav').getAttribute('aria-label') === 'Main menu'), 'az ugro link es a fomenu neve angolul');
     }
     await page.close();
   }
@@ -302,7 +302,7 @@ try {
     const { page } = await open('/jogi-informacio-kereso/');
     check(await page.evaluate(() => { const l = document.getElementById('ms-label'); return !!l && l.offsetHeight > 0; }), 'lathato mezocimke');
     const ta = await page.evaluateHandle(`(${DEEP})('textarea')[0]`);
-    check(await ta.evaluate(t => t.getAttribute('aria-label') === 'Jogi kérdés' && !t.getAttribute('role')), 'a mezo neve a lathato cimke, nincs felig megvalositott kombobox');
+    check(await ta.evaluate(t => t.getAttribute('aria-label') === 'Kérdés' && !t.getAttribute('role')), 'a mezo neve a lathato cimke, nincs felig megvalositott kombobox');
     await ta.asElement().focus();
     await page.keyboard.type('Vettem egy mosógépet, két hónap után elromlott');
     await page.keyboard.press('Enter'); await page.waitForTimeout(150);

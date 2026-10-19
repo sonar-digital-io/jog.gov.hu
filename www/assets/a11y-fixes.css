@@ -85,8 +85,7 @@ nav:has(> dap-ds-navigation-menu.main-navigation):not(.ms-mainnav) { display: no
   transition: opacity .12s ease, transform .12s ease, visibility 0s .12s;
   z-index: 60;
 }
-/* hoverre nyilik, kiveve ha Escape-pel elutasitottak (WCAG 1.4.13) */
-.ms-has-sub:not(.is-dismissed):hover > .ms-submenu,
+/* csak kattintasra / Enterre nyilik (hoverre nem) */
 .ms-has-sub.is-open > .ms-submenu {
   opacity: 1; visibility: visible; transform: translateY(0);
   transition: opacity .12s ease, transform .12s ease, visibility 0s 0s;
@@ -134,3 +133,90 @@ footer nav a {
 /* ertesito-dialogok: a tarolo maga kapja a fokuszt (a felolvaso bemondja), keret nelkul;
  * a gombokon a szokasos fokuszgyuru latszik */
 .a11y-notice-dialog:focus { outline: none; }
+
+.ms-drawer-footer-hidden { display: none !important; }
+
+/* Hirlevel-feliratkozas blokk: ha nincs mellette masik kartya, a tartalom teljes szelessegeben
+   jelenik meg, a "Feliratkozom" gomb jobbra (mobilon marad egymas alatt). */
+[class*="_subscriptionCardInner_"]:has(> :only-child) { width: 100%; }
+@media (min-width: 48rem) {
+  [class*="_subscriptionCardInner_"]:has(> :only-child) [class*="_subscriptionCardInnerText_"] {
+    flex-direction: row; align-items: center; justify-content: space-between; column-gap: var(--dds-spacing-800);
+  }
+}
+/* ...es a zold blokk a tartalmahoz igazodik (nincs min-magassag, egyenletes belso margo), a tartalom kozepre igazitva */
+[class*="_subscriptionCardInner_"]:has(> :only-child) > .card-medium { min-height: 0; display: flex; align-items: center; }
+[class*="_subscriptionCardInner_"]:has(> :only-child) [class*="_subscriptionCardInnerText_"] { width: 100%; padding: var(--dds-spacing-700); align-items: center; }
+
+/* Mobil/asztali torespont 1024 px (eredetileg 1280 px / xl): 1024-1343 px kozott a 1312 px-es
+   fejlec-kontener nem fer el, ezert a viewporthoz igazodik (nincs vizszintes gorgetes). */
+@media (min-width: 64rem) {
+  .xl\:w-\[1312px\] { max-width: calc(100vw - 32px); }
+}
+
+/* Szechenyi Terv Plusz / DIMOP logo (a dap.gov.hu c-dimop-logo mintajara): jobb also sarokban, mindig */
+.ms-dimop-logo { position: fixed; right: 0; bottom: 0; left: auto !important; top: auto !important; padding: var(--dds-spacing-600); z-index: 20; }
+.ms-dimop-logo img {
+  display: block; max-width: calc(100vw - 2 * var(--dds-spacing-600)); height: auto;
+  background-color: var(--dds-background-neutral-subtle, #fff); padding: var(--dds-spacing-400) var(--dds-spacing-600);
+  border-radius: var(--dds-radius-base); box-shadow: 0 6.91px 10.36px -1.73px #00000014; box-sizing: content-box;
+}
+.ms-dimop-close { position: absolute; top: calc(var(--dds-spacing-600) - var(--dds-spacing-300)); right: calc(var(--dds-spacing-600) - var(--dds-spacing-300)); }
+
+/* "Vissza az elozo oldalra" link a hibaoldalon ("Varatlan hiba tortent." / 404) */
+.ms-error-back {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: center;
+  margin-top: 32px; font-size: 20px; font-weight: 500; color: #2f7466; text-decoration: underline;
+  text-underline-offset: 6px; text-decoration-thickness: 2px;
+}
+.ms-error-back:hover { color: #0b3d3e; }
+.ms-error-back:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 4px; border-radius: 4px; }
+
+/* Egyetlen navigacios szekcio: logo | fomenu | nyelvvalaszto egy sorban a fejlec <nav>-jaban */
+@media (min-width: 64rem) {
+  nav.header-upper.ms-onenav { align-items: center; flex-wrap: nowrap; gap: var(--dds-spacing-400); }
+  nav.header-upper.ms-onenav > .ms-onenav-bar { flex: 1 1 auto; min-width: 0; margin: 0; }
+  nav.header-upper.ms-onenav > div.justify-center { display: none; }   /* a regi (ures) felso linksor helye */
+}
+
+/* a fomenu-sav nem kap sotetebb arnyalatu hatteret (az eredeti bg-black/30 helyett atlatszo) */
+.ms-onenav-bar, .ms-onenav-bar > div { background-color: transparent !important; }
+/* ...es nincs elmosas (backdrop-blur) sem a fomenu mogott: teljesen atlatszo */
+.ms-onenav-bar, .ms-onenav-bar * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.ms-onenav-bar > div[class*="backdrop-blur"] { display: none !important; }
+
+/* ---------- Egységes oldalmargó / tartalomszélesség (a njt.jog.gov.hu .wrapper mintájára) ----------
+ * Minden szekció (fejléc, hero, tartalom, lábléc) tartalma ugyanabban a 1200 px széles, középre
+ * igazított oszlopban van; 1200 px alatt a tartalom teljes szélességű, 16 px oldalmargóval.
+ * A 1232 px = 1200 px tartalom + 2 x 16 px belső margó. */
+@media (min-width: 64rem) {
+  .xl\:w-\[1312px\] { width: 1200px !important; max-width: calc(100vw - 32px) !important; }
+  nav.header-upper { padding-inline: 0 !important; }
+}
+.max-w-\[1090px\] { max-width: 1200px !important; }
+[class*="_gazetteTypeSwitcher_"], [class*="_cardContainer_"], [class*="_promotedInformationalTitle_"],
+[class*="_informationalCards_"], [class*="_subscriptionCardInner_"] { max-width: 1232px !important; }
+[class*="_footerContentInner_"] { max-width: 1232px; margin-inline: auto; }
+[class*="_footerContentInner_"] { padding-inline: 16px; }
+/* a Közlöny-kartyasor (nyilakkal) kartyai is a 1200 px-es oszlopra illeszkednek: 51 px nyil + 1232 px + 51 px */
+@media (min-width: 64rem) {
+  [class*="_latestGazettes_"] { padding-inline: 16px !important; }
+  [class*="_scrollerContainer_"] { width: min(1334px, 100%) !important; max-width: none !important; margin-inline: auto; }
+}
+/* az utolso menupont legordulo panelje jobbra igazodik (ne logjon ki a kepernyorol) */
+.ms-mainnav-list > li:last-child > .ms-submenu { left: auto; right: 0; }
+
+/* Lablec mindig a kepernyo aljan (rovid tartalomnal is); a main kitolti a maradek helyet */
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; }
+body > footer { margin-top: auto; flex: 0 0 auto; }
+/* kezdolap: a hero hattere kitolti a main teljes magassagat */
+main:has(.ms-searchbar-wrap.ms-on-dark) { min-height: 0; }
+main:has(.ms-searchbar-wrap.ms-on-dark) > div.relative { flex: 1 0 auto; display: flex; flex-direction: column; }
+main:has(.ms-searchbar-wrap.ms-on-dark) [class*="_hero_"] { flex: 1 0 auto; }
+/* ha a kezdolapon talalatok vannak, a hero a tartalmahoz igazodik (a talalatok kozvetlenul alatta) */
+main:has(#mock-search-results .ms-results) > div.relative { flex: 0 0 auto; }
+main:has(#mock-search-results .ms-results) [class*="_hero_"] { flex: 0 0 auto; }
+
+/* a logo mogotti szurke hatter nelkul; a logo a tartalmi oszlop bal szelehez igazodik */
+[class*="bg-(--dds-cold-grey-1100)"] { background-color: transparent !important; margin-left: 0 !important; padding: 6px 12px 6px 0 !important; }
