@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jog-gov-hu",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["scripts/serve.py", "8799", "--no-open"],
+      "port": 8799
+    }
+  ]
+}

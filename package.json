@@ -8,10 +8,11 @@
     "serve": "python3 scripts/serve.py",
     "build": "python3 scripts/mirror.py && python3 scripts/fetch_assets.py && npm run patch",
     "assets": "python3 scripts/fetch_assets.py",
-    "patch": "python3 scripts/patch_nav.py && python3 scripts/patch_a11y.py && python3 scripts/patch_mock_search.py && python3 scripts/patch_home_lang.py",
+    "patch": "python3 scripts/patch_nav.py && python3 scripts/patch_a11y.py && python3 scripts/patch_mock_search.py && python3 scripts/patch_home_lang.py && python3 scripts/patch_all_searches.py",
     "patch:nav": "python3 scripts/patch_nav.py",
     "patch:a11y": "python3 scripts/patch_a11y.py",
     "patch:mock": "python3 scripts/patch_mock_search.py",
+    "patch:all": "python3 scripts/patch_all_searches.py",
     "test": "python3 scripts/smoke_test.py",
     "test:a11y": "node scripts/test_a11y.mjs",
     "snapshot": "python3 scripts/snapshot_pages.py"

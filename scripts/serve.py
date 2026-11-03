@@ -13,6 +13,7 @@ Hasznalat:
 """
 import http.server
 import os
+import re
 import sys
 import threading
 import webbrowser
@@ -46,6 +47,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
            igy a React Router is ugyanazt latja, mint az elesen).
         """
         parts = urlsplit(self.path)
+        # a /jogi-informacio-kereso oldal megszunt: a kereso a Kezdolapon van (query-vel egyutt)
+        _m = re.match(r"^((?:/(?:en|de|fr|es|it|zh))?)/jogi-informacio-kereso/?$", parts.path)
+        if _m:
+            self.send_response(302)
+            self.send_header("Location", (_m.group(1) or "") + "/" + ("?" + parts.query if parts.query else ""))
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return None
         # 0. rogzitett API-/adatvalaszok (scripts/record_api.py)
         if parts.path.startswith("/api/") or parts.path == "/__manifest" or parts.path.endswith(".data"):
             return self._send_fixture(parts)

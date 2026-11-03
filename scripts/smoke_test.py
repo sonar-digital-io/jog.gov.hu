@@ -10,13 +10,13 @@ ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 PORT = 8791  # sajat port, hogy ne utkozzon a fuot szerverrel
 
 PAGES = [
-    "/", "/jogi-informacio-kereso/", "/szakmai-jogi-informacio-kereso/",
+    "/", "/szakmai-jogi-informacio-kereso/",
     "/magyar-kozlony/", "/agazati-kozlony/", "/archiv-agazati-kozlony/",
     "/jogszabalyi-aktualitasok/", "/kapcsolat/", "/felhasznaloi-kezikonyv/",
     "/felhasznalasi-feltetelek/", "/akadalymentesitesi-nyilatkozat/",
     "/adatkezelesi-tajekoztato/", "/agazati-rss.xml",
     # forditott oldalak (nyelvvalaszto / "browser language" ajanlat celjai)
-    "/en/", "/en/jogi-informacio-kereso", "/en/magyar-kozlony",
+    "/en/", "/en/magyar-kozlony",
     "/de/", "/fr/", "/es/", "/it/", "/zh/",
 ]
 

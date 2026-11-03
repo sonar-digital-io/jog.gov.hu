@@ -32,7 +32,7 @@ ROOT = os.environ.get(
 MARKER = "mock-search-assets"
 
 # a ket kereso-oldal + a kezdolap (ott a hero-ban ugyanez a kereso fut)
-TARGETS = ("jogi-informacio-kereso", "szakmai-jogi-informacio-kereso")
+TARGETS = ("szakmai-jogi-informacio-kereso",)   # a jogi-informacio-kereso oldal megszunt (a kereso a Kezdolapon van)
 LANGS = ("en", "de", "fr", "es", "it", "zh")
 HOME = "index.html"                       # www/index.html (kezdolap)
 HOME_H2 = "Kérdezze meg, hogy mit mond a jog!</h2></div>"

@@ -12,7 +12,7 @@ OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
 
 SEEDS = [
-    "/", "/jogi-informacio-kereso", "/szakmai-jogi-informacio-kereso",
+    "/", "/szakmai-jogi-informacio-kereso",
     "/magyar-kozlony", "/agazati-kozlony", "/archiv-agazati-kozlony",
     "/jogszabalyi-aktualitasok", "/kapcsolat", "/felhasznaloi-kezikonyv",
     "/felhasznalasi-feltetelek", "/akadalymentesitesi-nyilatkozat",

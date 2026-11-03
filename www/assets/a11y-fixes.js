@@ -99,6 +99,8 @@
     // a tabindex="-1" csak az ugro link alatt kell: allandoan a <main> egy tetszoleges
     // (nem interaktiv) kattintasra fokuszt kapna, es a bongeszo a magas <main> aljara gorgetne
     var link = D.querySelector("a.skip-to-content");
+    // a hibaoldalon nincs ugro link (a tartalom csak a hibauzenet es a visszalepes)
+    if (D.querySelector("a.ms-error-back")) { if (link) link.remove(); return; }
     if (!link) {
       link = D.createElement("a");
       link.className = "skip-to-content";
@@ -114,23 +116,10 @@
     var main = D.querySelector("main");
     if (!main) return;
     e.preventDefault();
-    // Ha van "Jogi kerdes" mezo, arra kerul a fokusz (gorgetes nelkul), es csak akkor
-    // gorgetunk hozza, ha nem lathato; kulonben a <main> kapja a fokuszt.
-    var host = D.querySelector(".ms-input-ds");
-    var field = host && (host.shadowRoot && host.shadowRoot.querySelector("textarea") || host);
-    if (field) {
-      field.focus({ preventScroll: true });
-      var r = host.getBoundingClientRect();
-      var vh = window.innerHeight || D.documentElement.clientHeight;
-      if (r.top < 0 || r.bottom > vh) {
-        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        host.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
-      }
-    } else {
-      setAttr(main, "tabindex", "-1");
-      main.focus();
-      main.addEventListener("blur", function () { delAttr(main, "tabindex"); }, { once: true });
-    }
+    // a fokusz a <main> elemre kerul (nem a keresomezore); a gorgetes a tartalom elejere visz
+    setAttr(main, "tabindex", "-1");
+    main.focus({ preventScroll: true });
+    main.addEventListener("blur", function () { delAttr(main, "tabindex"); }, { once: true });
     if (history.replaceState) history.replaceState(history.state, "", "#" + main.id);
   }
   D.addEventListener("click", function (e) {
@@ -140,6 +129,22 @@
   D.addEventListener("keydown", function (e) {
     if ((e.key === " " || e.key === "Spacebar") && e.target.matches && e.target.matches("a.skip-to-content")) jumpToMain(e);
   }, true);
+
+  // Visszalepes (bfcache): a menu lenyilok csukva allnak, a fokusz az ugro link ELE kerul (a kovetkezo Tab az ugro linkre visz)
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    D.querySelectorAll(".ms-has-sub.is-open").forEach(function (li) {
+      li.classList.remove("is-open");
+      var t = li.querySelector(":scope > .ms-sub-trigger"); if (t) t.setAttribute("aria-expanded", "false");
+    });
+    D.querySelectorAll("dap-ds-navigation-menu-item").forEach(function (it) { try { if (it.hideDropDown) it.hideDropDown(); } catch (er) {} });
+    try { if (D.activeElement && D.activeElement.blur) D.activeElement.blur(); } catch (er) {}
+    var m = D.createElement("span");
+    m.setAttribute("tabindex", "-1"); m.setAttribute("aria-hidden", "true"); m.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+    D.body.insertBefore(m, D.body.firstChild);
+    m.focus({ preventScroll: true });
+    m.addEventListener("blur", function () { m.remove(); }, { once: true });
+  });
 
   /* ============================================ 2. Szemantikus fomenu */
   var CHEVRON = '<svg class="ms-chevron" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="m12 13.171 4.95-4.95 1.414 1.415L12 16 5.636 9.636 7.05 8.222z"/></svg>';
@@ -174,7 +179,23 @@
       if (best) best.i.active = true;
     }
     // egyetlen kereso: a "Szakmai kereso" menupont nincs (a Jogi MI kereso "Szakmai kereso" kapcsolojara kerult)
-    return mergeSearch(groupGazettes(items.filter(function (it) { return !/\/szakmai-jogi-informacio-kereso\/?$/.test((it.href || "").split(/[?#]/)[0]); })));
+    // menupont-atnevezes (magyar): "Jogi hirek" -> "Hirek"
+    if (PAGE_LANG === "hu") {
+      items.forEach(function (it) { if (it.label === "Jogi hírek") it.label = "Hírek"; });
+      // a "Hirek" az utolso menupont
+      var news = items.filter(function (it) { return it.label === "Hírek"; })[0];
+      if (news) { items.splice(items.indexOf(news), 1); items.push(news); }
+    }
+    var res = mergeSearch(groupGazettes(items.filter(function (it) { return !/\/szakmai-jogi-informacio-kereso\/?$/.test((it.href || "").split(/[?#]/)[0]); })));
+    // magyar: a "Kozlemenyek" a 4. menupont
+    if (PAGE_LANG === "hu") {
+      var gi = -1; res.forEach(function (it, n) { if (it.gazettes) gi = n; });
+      if (gi !== -1) { var g = res.splice(gi, 1)[0]; res.splice(Math.min(3, res.length), 0, g); }
+    }
+    // a "Hasznos linkek" az utolso menupont (minden nyelven)
+    var ui = -1; res.forEach(function (it, n) { if (it.label === (USEFUL[PAGE_LANG] || USEFUL.en)) ui = n; });
+    if (ui !== -1 && ui !== res.length - 1) res.push(res.splice(ui, 1)[0]);
+    return res;
   }
   // A Kezdolap = a Jogi MI kereso (a teljes kereso a Kezdolapon van): egyetlen menupont, "Jogi MI kereso"
   // felirattal a Kezdolapra mutat; a regi, kulon "Jogi MI kereso" menupont megszunik.
@@ -189,14 +210,18 @@
     var out = [];
     items.forEach(function (it) {
       if (it === search) { if (!homeItem) { search.href = home; search.active = search.active || onSearch || (location.pathname.replace(/(.)\/+$/, "$1") === home); out.push(search); } return; }
-      if (it === homeItem) { it.label = search.label; it.active = it.active || search.active || onSearch; }
+      if (it === homeItem) {
+        it.label = search.label;
+        // csak a Kezdolapon (vagy a kereso oldalain) aktiv; mas oldalon (pl. Osszes keresesem) a statikus HTML "active" jelolese nem ervenyes
+        it.active = onSearch || location.pathname.replace(/(.)\/+$/, "$1") === home;
+      }
       out.push(it);
     });
     return out;
   }
   // Informaciosszerkezet: "Aktualis Magyar Kozlonyok", "Agazati kozlonyok" es "Archiv agazati
   // kozlonyok" egyetlen "Kozlonyok" legordulo alatt (fomenu + mobil fiok is ebbol epul).
-  var GAZETTES = { hu: "Közlönyök", en: "Gazettes", de: "Amtsblätter", fr: "Journaux officiels", es: "Boletines oficiales", it: "Gazzette", zh: "公报" };
+  var GAZETTES = { hu: "Közlemények", en: "Gazettes", de: "Amtsblätter", fr: "Journaux officiels", es: "Boletines oficiales", it: "Gazzette", zh: "公报" };
   function groupGazettes(items) {
     var P = LANG_PREFIX, paths = [P + "/magyar-kozlony", P + "/agazati-kozlony", P + "/archiv-agazati-kozlony"];
     var norm = function (h) { return (h || "").split(/[?#]/)[0].replace(/\/+$/, ""); };
@@ -215,7 +240,7 @@
       });
     });
     sub.sort(function (a, b) { return paths.indexOf(norm(a.href)) - paths.indexOf(norm(b.href)); });
-    var group = { label: GAZETTES[PAGE_LANG] || GAZETTES.en, href: null, active: hit.some(function (it) { return it.active; }), sub: sub, icon: null };
+    var group = { gazettes: true, label: GAZETTES[PAGE_LANG] || GAZETTES.en, href: null, active: hit.some(function (it) { return it.active; }), sub: sub, icon: null };
     var out = [], placed = false;
     items.forEach(function (it) {
       if (hit.indexOf(it) === -1) out.push(it);
@@ -314,6 +339,16 @@
     if (old) old.remove();
     dsNav.parentElement.insertBefore(buildNav(readDsMenu(ds)), dsNav.nextSibling);
   }
+  // Az eredeti DS-menu (<nav>) csak adatforras: a kepernyoolvasonak ne legyen masodik navigacios landmark.
+  // A hidden/aria-hidden/inert/role=none egyutt kivezeti a hozzaferesi fabol, a megjelenesen nem valtoztat
+  // (CSS-sel eddig is el volt rejtve).
+  function hideSourceNav() {
+    D.querySelectorAll("nav > dap-ds-navigation-menu.main-navigation").forEach(function (ds) {
+      var n = ds.parentElement;
+      if (n.classList.contains("ms-mainnav") || !n.nextElementSibling || !n.nextElementSibling.classList.contains("ms-mainnav")) return;
+      setAttr(n, "hidden", ""); setAttr(n, "aria-hidden", "true"); setAttr(n, "role", "none"); setAttr(n, "inert", "");
+    });
+  }
 
   /* ============================== 3. Nyelvvalaszto (DS navigation-menu) */
   var LANGS = { "/en/": ["en", "English"], "/de/": ["de", "Deutsch"], "/fr/": ["fr", "Français"], "/es/": ["es", "Español"], "/it/": ["it", "Italiano"], "/zh/": ["zh", "中文"] };
@@ -338,6 +373,22 @@
       enhanceDsMenuItems(menu);
     });
   }
+  // Az aktualisan kivalasztott nyelvre kattintva nincs oldalbetoltes: csak bezarjuk a listat.
+  // A window fogo fazisa a dokumentum elott fut (a fejlecbeli "offline-nav-fix" a dokumentumon fogja a linkeket).
+  window.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    var item = a && a.closest("dap-ds-navigation-menu-item");
+    if (!item || !item.querySelector('a[href^="/en/"], a[href^="/de/"]')) return;
+    if (a.closest('[slot="trigger"]')) return;
+    var h = a.getAttribute("href") || "", code = "hu";
+    Object.keys(LANGS).forEach(function (p) { if (h.indexOf(p) === 0) code = LANGS[p][0]; });
+    var cur = ((D.documentElement.getAttribute("lang") || "hu").toLowerCase().split("-")[0]);
+    if (code !== cur) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    try { item.hideDropDown(); } catch (er) {}
+    var tr = item.querySelector(':scope > [slot="trigger"]');
+    if (tr) tr.focus();
+  }, true);
   var hoverOff = function (e) {
     var p = e.composedPath ? e.composedPath() : [];
     for (var i = 0; i < p.length; i++) if (p[i] && p[i].hasAttribute && p[i].hasAttribute("data-ms-nohover")) { e.stopImmediatePropagation(); return; }
@@ -368,6 +419,29 @@
       // fogo fazisaban nyeljuk el oket (lasd hoverOff), a megjelolt elemekre. Ez nem fugg a
       // submenuController letezesetol (az a DS renderelese utan jon letre).
       el.setAttribute("data-ms-nohover", "");
+      // a lista helye ugyanaz, mint a tobbi (.ms-submenu) lenyilo menue: a gomb jobb szelehez igazitva (igy nem
+      // log ki a menusavbol), asztali nezetben a savval egy magassagban kezdodik (a sav aljatol 2px-re)
+      el._updatePlacementForLevel = function () {};
+      el.placement = "bottom-end";
+      var placeLang = function () { el.offset = window.matchMedia("(min-width: 1280px)").matches ? 15 : 0; };
+      placeLang();
+      window.addEventListener("resize", placeLang);
+      // nyitasi animacio: ugyanaz, mint a tobbi lenyilo menue (.ms-submenu): .12s alatt halvanybol, 4px-rel lentebbrol.
+      // A komponens a sajat stilusait ujra beallitja (felulirja a mienket), ezert nyitaskor mindig ujra hozzafuzzuk.
+      var animSheet = null;
+      var ensureAnim = function () {
+        try {
+          var sr = el.shadowRoot;
+          if (!sr || !("adoptedStyleSheets" in sr) || !window.CSSStyleSheet) return;
+          if (!animSheet) {
+            animSheet = new CSSStyleSheet();
+            animSheet.replaceSync("@keyframes ms-pop-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } " +
+              ".popup--opened { animation: ms-pop-in .12s ease; } @media (prefers-reduced-motion: reduce) { .popup--opened { animation: none; } }");
+          }
+          if (sr.adoptedStyleSheets.indexOf(animSheet) < 0) sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat(animSheet);
+        } catch (er) {}
+      };
+      ensureAnim();
       var c = el.submenuController;
       if (c) {
         try { c.removeListeners(); } catch (e) {}
@@ -377,7 +451,11 @@
         var t = e.target;
         if (!(t && t.closest && t.closest('[slot="trigger"]'))) return;
         e.preventDefault(); e.stopPropagation();
-        if (el.opened) el.hideDropDown(); else el.showDropDown(false);
+        if (el.opened) el.hideDropDown();
+        else {
+          placeLang(); ensureAnim(); el.showDropDown(false);
+          setTimeout(function () { try { el.updatePosition(); } catch (er) {} }, 60);
+        }
       }, true);
       el.addEventListener("focusout", function (e) { if (!e.relatedTarget || !el.contains(e.relatedTarget)) el.hideDropDown(); });
       el.addEventListener("keydown", function (e) {
@@ -397,6 +475,8 @@
           var link = t && t.closest && t.closest("a[href]");
           if (link && el.contains(link)) { e.preventDefault(); e.stopPropagation(); link.click(); return; }
         }
+        // nyitott listaban a Balra/Jobbra nem vihet ki a listabol (a DS menu a szomszedos elemre lepne)
+        if (el.opened && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); e.stopPropagation(); return; }
         if (el.opened && /^(ArrowDown|ArrowUp|Home|End)$/.test(e.key)) {
           var items = panelItems(); if (!items.length) return;
           var cur = -1;
@@ -409,12 +489,37 @@
       }, true);
       if (tr) {
         delAttr(tr, "aria-controls"); // "dropdown" nem letezo id volt
-        var curEl = el.querySelector("[aria-current]");
-        var curLang = curEl ? txt(curEl) : "";
-        // a lathato felirat ("HU") legyen a nev elejen (2.5.3 Cimke a nevben)
-        var vis = txt(tr) || "HU";
-        var lbl = vis + " – " + S.langBtn + (curLang ? ", " + S.curLang + ": " + curLang : "");
-        onShadow(tr, function (root) { var b = root.querySelector("button"); if (b) setAttr(b, "aria-label", lbl); });
+        // Felolvasas: "Nyelvválasztó, collapsed button. Jelenlegi nyelv: Magyar." -> a nev a nyelvvalaszto
+        // neve, az allapot aria-expanded, a jelenlegi nyelv leiras (aria-description)
+        var LANG_NAMES = { hu: "Magyar", en: "English", de: "Deutsch", fr: "Français", es: "Español", it: "Italiano", zh: "中文" };
+        var pageLang = ((D.documentElement.getAttribute("lang") || "hu").toLowerCase().split("-")[0]);
+        var descr = S.curLang.charAt(0).toUpperCase() + S.curLang.slice(1) + ": " + (LANG_NAMES[pageLang] || pageLang) + ".";
+        // a gomb allapota (aria-expanded) csak a belso <button>-on legyen: a kulso host elemen
+        // (nincs szerepe) a felolvaso kulon "csoportkent" jelentene be
+        var cleanHost = function () { ["aria-expanded", "aria-haspopup", "aria-label", "aria-current"].forEach(function (n) { if (tr.hasAttribute(n)) tr.removeAttribute(n); }); };
+        var syncInner = function () {
+          var b = tr.shadowRoot && tr.shadowRoot.querySelector("button");
+          if (!b) return;
+          setAttr(b, "aria-label", S.langNav);
+          setAttr(b, "aria-description", descr);
+          delAttr(b, "aria-haspopup");   // "menu pop-up" helyett egyszeru, osszecsukott/kinyitott gomb
+          delAttr(b, "aria-current");    // a gomb nem "current page"
+          setAttr(b, "aria-expanded", el.opened ? "true" : "false");
+          setAttr(tr, "data-lang-open", el.opened ? "true" : "false"); // a DS "nyitott" stilusa miatt (lasd a11y-fixes.css)
+        };
+        cleanHost(); syncInner();
+        if (!tr.__hostObs && window.MutationObserver) {
+          tr.__hostObs = new MutationObserver(function () { cleanHost(); syncInner(); });
+          tr.__hostObs.observe(tr, { attributes: true, attributeFilter: ["aria-expanded", "aria-haspopup", "aria-label", "aria-current"] });
+          onShadow(tr, function (root) {
+            var b = root.querySelector("button");
+            if (b) new MutationObserver(syncInner).observe(b, { attributes: true, attributeFilter: ["aria-expanded", "aria-haspopup", "aria-label", "aria-current", "aria-description"] });
+          });
+          // nyitas/zaras utan (kattintas, billentyu, fokuszvesztes) az allapot frissitese
+          ["click", "keydown", "focusout"].forEach(function (ev) {
+            el.addEventListener(ev, function () { setTimeout(syncInner, 0); setTimeout(syncInner, 250); }, true);
+          });
+        }
       }
     });
   }
@@ -453,6 +558,8 @@
   function images() {
     // lablec-logo: nem link, a mellette levo szoveg nem rola szol -> dekorativ
     D.querySelectorAll('footer img[alt="MKNJK Footer Logo"]').forEach(function (img) { setAttr(img, "alt", ""); });
+    // a bagoly-ikon dekorativ: ures alt (a mock-search.js a data-ms-owl jelolesbol keresi a forrasat)
+    D.querySelectorAll('img[alt="Bagoly Ikon"]').forEach(function (img) { setAttr(img, "data-ms-owl", ""); setAttr(img, "alt", ""); });
     // Szechenyi Terv Plusz: a kep szovege (tamogatasi kozlemeny) legyen az alt
     D.querySelectorAll('[class*="szechenyi-terv-plus-logo"] img').forEach(function (img) { setAttr(img, "alt", S.szechenyi); });
     D.querySelectorAll("main img").forEach(function (img) {
@@ -500,6 +607,61 @@
       if (pdf && /pdf/i.test(txt(pdf)) && title) setAttr(pdf, "aria-label", txt(pdf) + ": " + title + " " + NEW_WIN);
     });
   }
+
+  /* ========== 7d. Legordulok: a nyilo lista pontosan olyan szeles, mint a mezo, amelybol nyilik (minden kepernyon, minden oldalon)
+     A lista a komponens belso dap-ds-popup elemenek shadow DOM-jaban van, a szelesseget a komponens maga felulirja,
+     ezert stilust fuzunk a popup shadow root-jahoz; a mezo szelesseget CSS valtozoban (--ms-pop-w) adjuk at. */
+  (function () {
+    var POP_CSS = null, POP_H_CSS = null;
+    var DD = /^DAP-DS-(SELECT|COMBOBOX)$/;
+    function popups(root, out) {
+      if (!root || !root.querySelectorAll) return out;
+      Array.prototype.forEach.call(root.querySelectorAll("*"), function (n) {
+        if (n.tagName === "DAP-DS-POPUP") out.push(n);
+        if (n.shadowRoot) popups(n.shadowRoot, out);
+      });
+      return out;
+    }
+    function syncPopW(el) {
+      el.style.setProperty("--ms-pop-w", Math.round(el.getBoundingClientRect().width) + "px");
+      // a Keresesi beallitasok ablakban: ha a lista nem fer el a mezo alatt az ablak teruleten belul, felfele nyilik
+      var dlg = el.closest && el.closest(".ms-settings-dialog");
+      if (dlg && !el.opened) {
+        var fr = el.getBoundingClientRect(), dr = dlg.getBoundingClientRect();
+        var count = el.querySelectorAll("dap-ds-option-item").length;
+        var need = Math.min(250, count * 36 + 16);
+        var below = dr.bottom - fr.bottom - 8, above = fr.top - dr.top - 8;
+        var up = below < need && above > below;
+        el.setAttribute("placement", up ? "top-start" : "bottom-start");
+        // a lista sosem log ki az ablak teruleterol: ha kevesebb a hely, alacsonyabb lesz (belul gorgetheto)
+        el.style.setProperty("--ms-pop-h", Math.max(96, Math.min(250, Math.floor(up ? above : below))) + "px");
+      }
+      popups(el.shadowRoot, []).forEach(function (pu) {
+        var sr = pu.shadowRoot;
+        if (!sr || sr.__msPopW || !("adoptedStyleSheets" in sr) || !window.CSSStyleSheet) return;
+        try {
+          if (!POP_CSS) { POP_CSS = new CSSStyleSheet(); POP_CSS.replaceSync(".popup { width: var(--ms-pop-w) !important; box-sizing: border-box; }"); }
+          sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat(POP_CSS); sr.__msPopW = true;
+        } catch (e) {}
+        // a Keresesi beallitasok ablakban minden legordulo lista legfeljebb 250px magas (belul gorgetheto)
+        if (!sr.__msPopH && el.closest && el.closest(".ms-settings-dialog")) {
+          try {
+            if (!POP_H_CSS) { POP_H_CSS = new CSSStyleSheet(); POP_H_CSS.replaceSync(".popup { max-height: var(--ms-pop-h, 250px) !important; overflow-y: auto; }"); }
+            sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat(POP_H_CSS); sr.__msPopH = true;
+          } catch (e) {}
+        }
+      });
+    }
+    ["pointerdown", "focusin", "keydown", "input", "click"].forEach(function (ev) {
+      window.addEventListener(ev, function (e) {
+        var path = e.composedPath ? e.composedPath() : [], el = null;
+        for (var i = 0; i < path.length; i++) { if (path[i] && path[i].tagName && DD.test(path[i].tagName)) { el = path[i]; break; } }
+        if (!el) return;
+        syncPopW(el);
+        setTimeout(function () { syncPopW(el); }, 120);
+      }, true);
+    });
+  })();
 
   /* ========== 7e. Legordulok (dap-ds-select): Tab ne ragadjon a listaban (2.1.2) */
   // A DS nyitott listaja elnyeli a Tabot: csak Escape-pel lehet kilepni (az elesen
@@ -619,25 +781,45 @@
       return false;
     });
     var html = D.documentElement;
-    if (!banner || !isVisible(banner)) { html.style.removeProperty("scroll-padding-bottom"); return; }
-    // A Szechenyi Terv Plusz (EU-tamogatasi) logo pozicioja fix (jobb also sarok),
-    // a suti-sav eltakarta (mobilon teljesen, desktopon reszben). A SAVOT emeljuk
-    // a logo fole, ha vizszintesen atfednek; a logo a helyen marad.
-    var logo = D.querySelector('[class*="szechenyi-terv-plus-logo"].fixed');
-    banner.style.removeProperty("bottom");
-    if (logo && isVisible(logo)) {
-      var br = banner.getBoundingClientRect(), lr = logo.getBoundingClientRect();
-      if (br.right > lr.left && br.left < lr.right && br.bottom > lr.top) {
-        var want = Math.ceil(window.innerHeight - lr.top + 8) + "px";
-        banner.style.setProperty("bottom", want, "important");
-      }
+    if (!banner || !isVisible(banner)) {
+      html.style.removeProperty("scroll-padding-bottom");
+      var lg0 = D.querySelector('[class*="szechenyi-terv-plus-logo"].fixed'); if (lg0) lg0.style.removeProperty("bottom");
+      D.querySelectorAll("[data-consent-inert]").forEach(function (n) { n.removeAttribute("inert"); n.removeAttribute("data-consent-inert"); });
+      return;
     }
+    // Nem modalis: a felhasznalo a sav elhagyhatja (Tab / kattintas), a lap tobbi resze elerheto marad.
+    delAttr(banner, "aria-modal");
+    // Billentyuzettel a fokusz nem hagyhatja el a suti-ablakot: a Tab/Shift+Tab az ablak (kontener) es a gombjai
+    // kozott korbe jar, amig az ablak nyitva van (a "Rendben" bezarja). Kivulrol erkezo Tab is az ablakra visz.
+    if (!banner.__tabTrap) {
+      banner.__tabTrap = true;
+      D.addEventListener("keydown", function (e) {
+        if (e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+        var b = D.querySelector(".a11y-consent-banner");
+        if (!b || !isVisible(b)) return;
+        var items = [b].concat(Array.prototype.slice.call(b.querySelectorAll("button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])")).filter(isVisible));
+        var ae = D.activeElement;
+        var i = items.indexOf(ae);
+        if (i === -1 && !(ae && b.contains(ae))) {          // a fokusz az ablakon kivul van
+          e.preventDefault(); (e.shiftKey ? items[items.length - 1] : items[0]).focus({ preventScroll: true }); return;
+        }
+        if (i === -1) return;
+        var n = e.shiftKey ? (i === 0 ? items.length - 1 : i - 1) : (i === items.length - 1 ? 0 : i + 1);
+        e.preventDefault(); items[n].focus({ preventScroll: true });
+      }, true);
+    }
+    D.querySelectorAll("[data-consent-inert]").forEach(function (n) { n.removeAttribute("inert"); n.removeAttribute("data-consent-inert"); });
     banner.classList.add("a11y-consent-banner");
     // nem-modalis dialog: a felolvaso fokuszaltakor bemondja a nevet + a szoveget
     setAttr(banner, "role", "dialog");
     setAttr(banner, "aria-label", S.consent);
     var txtBox = banner.querySelector(":scope > div:first-child");
     if (txtBox) setAttr(banner, "aria-describedby", ensureId(txtBox, "suti-szoveg"));
+    // cim a szoveg folott (a dap.gov.hu suti-ablakanak mintajara); a nev ugyanaz, mint a dialog aria-label-je
+    if (!banner.querySelector(".a11y-consent-title")) {
+      var ct = D.createElement("p"); ct.className = "a11y-consent-title"; ct.setAttribute("aria-hidden", "true"); ct.textContent = S.consent;
+      banner.insertBefore(ct, banner.firstChild);
+    }
     // FIGYELEM: scroll-padding-bottom-ot NEM allitunk. A legordulok (dap-ds-select)
     // nyitaskor fokuszt adnak egy listaelemnek; a scroll-padding miatt a bongeszo
     // ilyenkor odagorgette az oldalt, a DS popup gorgetesre bezarult, a fokusz
@@ -651,6 +833,12 @@
     var el = D.activeElement;
     while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
     if (!el || el === D.body) return;
+    // parbeszedablakban (dialog) levo elemnel sem: a modalis ablak mogotti oldalt nem gorgetjuk
+    if (el.closest && el.closest("dialog")) return;
+    // a <main> (nagy tarolo) fokuszanal sem: a kihagyo link ne gorgesse le az oldalt
+    if (el.tagName === "MAIN") return;
+    // a suti-sav (es gombjai) fokuszanal nem gorgetunk: az oldal gorgetesi helyzete maradjon
+    if (el.closest && el.closest(".a11y-consent-banner")) return;
     // Lebego retegek (legordulo lista, popup, menu) belsejeben NEM gorgetunk:
     // a gorgetes bezarja a DS popupot es elveszik a fokusz (a Kozlonyszam-
     // legordulo billentyuzettel hasznalhatatlan lett tole).
@@ -679,10 +867,38 @@
   // jon; az utolso utan (billentyuzetes hasznalatnal) a lap elejere, az ugro
   // linkre kerul a fokusz. Csak akkor nyulunk a fokuszhoz, ha az "szabad"
   // (body-n van), azaz nem vesszuk el a felhasznalotol.
+  // az elso Tab (az oldal elejerol) a suti-savra visz; onnan: Rendben -> ugro link -> logo
+  D.addEventListener("keydown", function (e) {
+    if (e.key !== "Tab" || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+    var ae = D.activeElement;
+    if (ae && ae !== D.body && ae !== D.documentElement) return;
+    var cb = D.querySelector(".a11y-consent-banner");
+    if (!cb || cb.__firstTab || !isVisible(cb)) return;
+    cb.__firstTab = true;
+    e.preventDefault();
+    setAttr(cb, "tabindex", "-1");
+    cb.focus({ preventScroll: true });
+  }, true);
+  // ha a bongeszo sajat feluleterol (cimsor) Tabbal erkezik a fokusz az oldalra, nincs keydown az oldalon:
+  // az elsokent fokuszt kapo ugro link helyett is a suti-sav az elso megallo
+  D.addEventListener("focusin", function (e) {
+    var t = e.target;
+    if (e.relatedTarget || !t.classList || !t.classList.contains("skip-to-content")) return;
+    var cb = D.querySelector(".a11y-consent-banner");
+    if (!cb || cb.__firstTab || !isVisible(cb)) return;
+    cb.__firstTab = true;
+    setAttr(cb, "tabindex", "-1");
+    cb.focus({ preventScroll: true });
+  }, true);
   var lastInput = "key";
   D.addEventListener("keydown", function () { lastInput = "key"; }, true);
   D.addEventListener("pointerdown", function () { lastInput = "pointer"; }, true);
   var dlgSeen = [], dlgOpen = [];
+  // az ugro linkre csak akkor ugrunk, ha a felhasznalo a sav/ablak gombjaival mar dolgozott (betolteskor nem)
+  var dlgUsed = false;
+  D.addEventListener("focusin", function (e) {
+    if (e.target.closest && e.target.closest(".a11y-notice-dialog, .a11y-consent-banner, [role=dialog]")) dlgUsed = true;
+  }, true);
   function noticeDialogs() {
     var list = [];
     var msg = D.getElementById("browser-locale-offer-message");
@@ -705,13 +921,244 @@
       if (dlgSeen.indexOf(target) === -1) dlgSeen.push(target);
       setAttr(target, "tabindex", "-1");
       target.classList.add("a11y-notice-dialog");
+      // a suti-sav nem kap automatikus fokuszt: betolteskor a felolvaso eloszor az oldal cimet mondja be,
+      // a sav az elso Tab-bal erheto el (lasd cookieFirstTab)
+      if (target.classList.contains("a11y-consent-banner")) return;
       if (ae !== target) target.focus({ preventScroll: true });
       return;
     }
-    if (closed && onBody && lastInput === "key") {
-      var sk = D.querySelector("a.skip-to-content");
-      if (sk) sk.focus({ preventScroll: true });
+    // a suti-ablak bezarasa utan a fokusz NEM ugrik automatikusan az "Ugras a fo tartalomra" linkre:
+    // a kovetkezo Tab az oldal elejerol indul (ott az ugro link az elso megallo)
+  }
+
+  /* ===== Navbar: minden menupont "gomb" (a linkek is) a kepernyoolvasonak */
+  function navButtons() {
+    var as = [];
+    D.querySelectorAll("nav.header-upper dap-ds-button").forEach(function (h) {
+      var a = h.shadowRoot && h.shadowRoot.querySelector("a");
+      if (a) as.push(a);
+    });
+    // a (light DOM) menu/legordulo linkek; a fejlec logoja marad link
+    D.querySelectorAll("nav.header-upper a[href]").forEach(function (a) {
+      if (!a.querySelector("img")) as.push(a);
+    });
+    as.forEach(function (a) {
+      setAttr(a, "role", "button");
+      if (!a.__btnKeys) {
+        a.__btnKeys = true;
+        // gombkent a Szokoz is aktivalja (a linknek csak az Enter)
+        a.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Spacebar") { e.preventDefault(); a.click(); } });
+      }
+    });
+  }
+
+  /* ===== Hibaoldal: erkezeskor a fokusz a hibauzenetre kerul, igy a felolvaso bemondja */
+  var errFocused = false;
+  function errorScreen() {
+    if (errFocused) return;
+    var back = D.querySelector("a.ms-error-back");
+    var main = back && back.closest("main");
+    if (!main) return;
+    errFocused = true;
+    setAttr(main, "tabindex", "-1");
+    main.focus({ preventScroll: true });
+  }
+
+  /* ===== Lablecbol elerheto oldalak: az oldalcim a zold savban (mint az "Aktualis Magyar Kozlonyok" oldalon) ===== */
+  var FOOTER_PAGE_RE = /^(?:\/(?:en|de|fr|es|it|zh))?\/(kapcsolat|felhasznaloi-kezikonyv|felhasznalasi-feltetelek|akadalymentesitesi-nyilatkozat|adatkezelesi-tajekoztato)\/?$/;
+  function footerPageTitle() {
+    if (!FOOTER_PAGE_RE.test(location.pathname)) return;
+    var main = D.querySelector("main"), hero = main && main.querySelector('[class*="_hero_"]');
+    var ph = hero && hero.querySelector(".xl\\:h-\\[41px\\]");
+    if (!ph || hero.querySelector(".a11y-page-title")) return;
+    var h = main.querySelector("h1.dds-heading:not(.a11y-page-h1-src)");
+    if (!h || hero.contains(h)) return;
+    var box = D.createElement("div");
+    box.className = "a11y-page-title";
+    box.innerHTML = '<div class="a11y-page-title-in"><h1 class="dds-heading-inverted dds-typography-h1"></h1></div>';
+    box.querySelector("h1").textContent = h.textContent;
+    ph.parentNode.appendChild(box);
+    // a tartalom ugyanabban az oszlopban/tavolsagra, mint az "Aktualis Magyar Kozlonyok" oldalon
+    var content = main.querySelector(':scope > div:not(.relative)');
+    if (content && content.firstElementChild) content.firstElementChild.classList.add("a11y-page-content");
+    h.classList.add("a11y-page-h1-src");       // az eredeti cim kimarad (nem lesz ketszer oldalcim)
+    docCards(main);
+    contactSplit(main);
+    termsToc(main);
+  }
+
+  /* Kapcsolat oldal: ketto egymas melletti szegmens (2/3 + 1/3). A masodik az uzemelteto cegadatait es az elerhetosegeket tartalmazza.
+     A szoveg a React innerHTML-jebol jon, amit ujrarenderelés visszaallithat: ezert az eredeti csomopontokat nem toroljuk, hanem
+     elrejtjuk (a-contact-src), es a rejtest MutationObserver ujra elvegzi, ha a React visszaallitja a tartalmat. */
+  function contactSplit(main) {
+    if (!/\/kapcsolat\/?$/.test(location.pathname)) return;
+    var ck = main.querySelector(".a11y-page-content .ck-content");
+    if (!ck || ck.__a11ySplit) return;
+    var parts = contactParts(ck);
+    if (!parts) return;
+    ck.__a11ySplit = true;
+    var aside = D.createElement("aside");
+    aside.className = "a11y-contact-aside";
+    var p1 = D.createElement("p"); p1.textContent = parts.sentence;
+    aside.appendChild(p1);
+    if (parts.ids) {
+      var ids = D.createElement("p");
+      ids.appendChild(D.createTextNode(parts.ids[0]));
+      ids.appendChild(D.createElement("br"));
+      ids.appendChild(D.createTextNode(parts.ids[1]));
+      aside.appendChild(ids);
     }
+    var contact = parts.contact.cloneNode(true), lead = contact.querySelector(":scope > span"), lbr = contact.querySelector(":scope > br");
+    if (lead && lbr) {   // a "Kapcsolat:" felirat h3 cim lesz, kettospont nelkul
+      var h = D.createElement("h3");
+      h.className = "dds-typography dds-heading dds-typography-h5";
+      h.textContent = lead.textContent.replace(/[\s\u00a0]*[:：]\s*$/, "");
+      lead.remove(); lbr.remove();
+      aside.appendChild(h);
+    }
+    aside.appendChild(contact);
+    var split = D.createElement("div");
+    split.className = "a11y-contact-split";
+    ck.parentNode.insertBefore(split, ck);
+    split.appendChild(ck); split.appendChild(aside);
+    var apply = function () { hideContactSrc(ck); };
+    apply();
+    new MutationObserver(apply).observe(ck, { childList: true, subtree: true });
+  }
+  /* Felhasznalasi feltetelek + Adatkezelesi tajekoztato: mint a dap.gov.hu/aszf oldal - balra a szoveg, jobbra tapadó (sticky) "Tartalom" kartya a fejezetcimekkel (h3).
+     A szoveg a React innerHTML-jebol jon: a cimek id-jet MutationObserver allitja vissza, ha a React ujrarendereli a tartalmat. */
+  var TOC_LABEL = { hu: "Tartalom", en: "Contents", de: "Inhalt", fr: "Sommaire", es: "Contenido", it: "Indice", zh: "目录" };
+  function termsToc(main) {
+    if (!/\/(?:felhasznalasi-feltetelek|adatkezelesi-tajekoztato)\/?$/.test(location.pathname)) return;
+    var ck = main.querySelector(".a11y-page-content .ck-content");
+    if (!ck || ck.__a11yToc) return;
+    var lm = /^\/(en|de|fr|es|it|zh)\//.exec(location.pathname), lang = lm ? lm[1] : "hu";
+    var setIds = function () {
+      var used = {};
+      // a szerkeszto a szamozas utan nbsp-sorozatot hagy a cimekben ("1.      Altalanos ...") - egyetlen szokozre tomorites
+      [].forEach.call(ck.querySelectorAll(":scope > h3, :scope > h4"), function (h) {
+        var w = D.createTreeWalker(h, NodeFilter.SHOW_TEXT), n;
+        while ((n = w.nextNode())) { var v = n.nodeValue.replace(/[\s\u00a0]{2,}/g, " "); if (v !== n.nodeValue) n.nodeValue = v; }
+      });
+      // Adatkezelesi tajekoztato (HU): a ket kozepre igazitott alcim (h3) egyetlen, 18 px-es bekezdesse olvad
+      if (/^\/adatkezelesi-tajekoztato\/?$/.test(location.pathname) && !ck.querySelector(":scope > p.a11y-merged-title")) {
+        var sub = ck.querySelectorAll(":scope > h3.text-align-center");
+        if (sub.length >= 2) {
+          var m2 = D.createElement("p");
+          m2.className = "a11y-merged-title";
+          m2.appendChild(D.createTextNode("Adatkezelési tájékoztató " + sub[0].textContent.replace(/[\s\u00a0]+/g, " ").trim()));
+          m2.appendChild(D.createTextNode(" " + sub[1].textContent.replace(/[\s\u00a0]+/g, " ").trim()));
+          sub[0].parentNode.insertBefore(m2, sub[0]);
+          sub[0].classList.add("a11y-contact-src"); sub[1].classList.add("a11y-contact-src");
+        }
+      }
+      // Felhasznalasi feltetelek (HU): a csupa nagybetus alcim (h2) 18 px-es, normal kis/nagybetus bekezdes lesz
+      if (/^\/felhasznalasi-feltetelek\/?$/.test(location.pathname) && !ck.querySelector(":scope > p.a11y-merged-title")) {
+        var h2s = ck.querySelectorAll(":scope > h2.text-align-center");
+        if (h2s.length >= 2) {
+          var m3 = D.createElement("p");
+          m3.className = "a11y-merged-title";
+          m3.textContent = "Felhasználási feltételek a Nemzeti Jogszabálytárhoz és a mesterséges intelligencia alapú keresőhöz";
+          h2s[1].parentNode.insertBefore(m3, h2s[1]);
+          h2s[1].classList.add("a11y-contact-src");
+        }
+      }
+      // a tartalom elso cime ugyanaz, mint az oldalcim (zold sav): elrejtjuk, hogy ne ismetlodjon
+      var h1 = main.querySelector("h1.a11y-page-h1-src"), t0 = ck.querySelector(":scope > h2");
+      var norm = function (x) { return x.replace(/[\s\u00a0]+/g, " ").trim().toLowerCase(); };
+      if (h1 && t0 && norm(t0.textContent) === norm(h1.textContent)) t0.classList.add("a11y-contact-src");
+      [].forEach.call(ck.querySelectorAll(":scope > h3:not(.text-align-center)"), function (h) {   // a kozepre igazitott h3-ak a cim alcimei, nem fejezetek
+        h.classList.add("dds-anchor");   // ezt a osztalyt keresi a dap-ds-toc
+        if (h.id) return;
+        var id = h.textContent.replace(/[\s\u00a0]+/g, " ").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "fejezet";
+        while (used[id] || D.getElementById(id)) id += "-";
+        used[id] = 1; h.id = id;
+      });
+    };
+    setIds();
+    if (!ck.querySelector(":scope > h3:not(.text-align-center)")) return;
+    ck.__a11yToc = true;
+    var split = D.createElement("div");
+    split.className = "a11y-terms-split";
+    var aside = D.createElement("aside");
+    aside.className = "a11y-terms-aside";
+    var toc = D.createElement("dap-ds-toc");
+    toc.setAttribute("header", TOC_LABEL[lang] || TOC_LABEL.en);
+    toc.setAttribute("noindent", "true");
+    toc.setAttribute("minheadinglevel", "3");
+    toc.setAttribute("maxheadinglevel", "3");
+    toc.setAttribute("size", "lg");
+    toc.setAttribute("rootmargin", "0px 0px -76% 0px");
+    toc.setAttribute("lastanchorrootmargin", "0px 0px -79% 0px");
+    aside.appendChild(toc);
+    // A hosszu (tobb ezer px) smooth-scroll animacio akadozonak/"megallonak" tunik: a fejezetre azonnal ugrunk, a fokuszt is oda tesszuk.
+    toc.addEventListener("click", function (e) {
+      var a = e.composedPath().filter(function (n) { return n.tagName === "A"; })[0];
+      var href = a && a.getAttribute("href");
+      if (!href || href.charAt(0) !== "#" || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      var target = D.getElementById(decodeURIComponent(href.slice(1)));
+      if (!target) return;
+      e.preventDefault();
+      var top = target.getBoundingClientRect().top + window.pageYOffset - 96;
+      window.scrollTo({ top: Math.max(top, 0), behavior: "instant" });
+      try { history.pushState(null, "", href); } catch (_) {}
+      target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    });
+    ck.parentNode.insertBefore(split, ck);
+    split.appendChild(aside); split.appendChild(ck);
+    new MutationObserver(setIds).observe(ck, { childList: true, subtree: true });
+  }
+  function contactParts(ck) {
+    var ps = ck.querySelectorAll(":scope > p"), n = ps.length;
+    if (n < 2) return null;
+    var op = ps[n - 2], spans = op.querySelectorAll(":scope > span");
+    if (op.querySelectorAll(":scope > br").length < 2 || !spans.length) return null;
+    var text = spans[spans.length - 1].textContent.replace(/\u00a0/g, " ");
+    var cap = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
+    var m = /\s*\(([^()]*?:\s*[\d-]+),\s*([^()]*?:\s*[\d-]+)\)/.exec(text);
+    return { sentence: m ? text.replace(m[0], "") : text, ids: m ? [cap(m[1]), cap(m[2])] : null, contact: ps[n - 1] };
+  }
+  function hideContactSrc(ck) {
+    var ps = ck.querySelectorAll(":scope > p"), n = ps.length;
+    if (n < 2) return;
+    var hide = function (el) { if (el && !el.classList.contains("a11y-contact-src")) el.classList.add("a11y-contact-src"); };
+    hide(ps[n - 1]);
+    var op = ps[n - 2], spans = op.querySelectorAll(":scope > span");
+    hide(spans[spans.length - 1]);
+    [].forEach.call(op.querySelectorAll(":scope > br"), hide);
+    var first = ps[0];   // az ures szerkesztoi bekezdes elcsusztatna a ket szegmens tetejet
+    if (!first.textContent.replace(/\u00a0/g, "").trim()) hide(first);
+  }
+
+  /* A "Letoltheto dokumentumok" lista (Felhasznaloi kezikonyv, Akadalymentesitesi nyilatkozat) ugyanolyan h2 + kartya elrendezes,
+     mint az "Aktualis Magyar Kozlonyok" oldal listaja: egy kartya dokumentumonkent (cim + meret, jobbra "PDF letoltese" gomb). */
+  function docCards(main) {
+    var h3 = [].slice.call(main.querySelectorAll("h3.dds-heading")).filter(function (x) { return x.nextElementSibling && x.nextElementSibling.querySelector(".document-divider, a.dds-link[href$='.pdf']"); })[0];
+    var list = h3 && h3.nextElementSibling;
+    if (!h3 || !list || list.getAttribute("data-a11y-cards")) return;
+    var docs = [].slice.call(list.querySelectorAll("a.dds-link")).map(function (a) {
+      var sm = a.parentElement && a.parentElement.querySelector("small");
+      return { href: a.getAttribute("href"), title: (a.querySelector("span") || a).textContent.trim(), size: sm ? sm.textContent.replace(/[()]/g, "").trim() : "" };
+    });
+    if (!docs.length) return;
+    var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+    var h2 = D.createElement("h2");
+    h2.className = "dds-heading dds-typography-h2";
+    h2.textContent = h3.textContent;
+    var wrap = D.createElement("div");
+    wrap.className = "flex flex-col gap-(--dds-spacing-200) lg:gap-(--dds-spacing-400)";
+    wrap.setAttribute("data-a11y-cards", "1");
+    wrap.innerHTML = docs.map(function (d) {
+      return '<div class="dds-card" style="border-radius: var(--dds-radius-base); background-color: var(--dds-white-70);"><span class="dds-card-content"><div class="">' +
+        '<div class="flex flex-col lg:flex-row justify-between w-full p-(--dds-spacing-400) lg:p-(--dds-spacing-800)">' +
+        '<div class="flex flex-col gap-(--dds-spacing-200)"><div><h5 class="dds-heading dds-typography-h5" aria-level="3">' + esc(d.title) + '</h5>' +
+        (d.size ? '<p class="dds-typography typography-body dds-typography-size--sm text-(--dds-text-neutral-subtle)">' + esc(d.size) + '</p>' : "") + '</div><div class="flex flex-row gap-(--dds-spacing-400)"></div></div>' +
+        '<div class="pt-(--dds-spacing-400) lg:pt-0 lg:self-center"><a href="' + esc(d.href) + '" class="dds-button dds-button--primary dds-button--md dds-button-square" aria-label="PDF megnyitása: ' + esc(d.title) + (d.size ? " (" + esc(d.size) + ")" : "") + '">PDF megnyitása</a></div>' +
+        '</div></div></span></div>';
+    }).join("");
+    h3.replaceWith(h2);
+    list.replaceWith(wrap);
   }
 
   /* ============================================= 11. Mobil hamburgermenu */
@@ -935,6 +1382,32 @@
       var prev = nav.previousElementSibling;
       if (prev && prev.tagName === "DAP-DS-DIVIDER") prev.classList.add("ms-drawer-footer-hidden");
     });
+    // React-es fiok: az also 3 kulso link (Nemzeti Jogszabalytar, Magyar Kozlony Portal, Ceginformacios Portal)
+    // a "Hasznos linkek" legordulo lista TETEJERE kerul; az uresen maradt blokk (es elvalasztoja) rejtve
+    var useful = D.querySelector("dap-ds-sidenav-group.header-mobile-sidenav-group-item");
+    if (useful) {
+      var firstSub = useful.querySelector('dap-ds-sidenav-item[slot="submenu"]');
+      var extHrefs = ["https://njt.hu/", "https://magyarkozlony.hu", "https://cegportal.im.gov.hu/frontend/cegkozlony"];
+      var movable = extHrefs.map(function (h) {
+        return D.querySelector('dap-ds-sidenav.header-mobile-sidenav > dap-ds-sidenav-item[href="' + h + '"]');
+      }).filter(Boolean);
+      movable.forEach(function (it) {
+        it.setAttribute("slot", "submenu");
+        useful.insertBefore(it, firstSub || null);
+      });
+      D.querySelectorAll("dap-ds-sidenav.header-mobile-sidenav").forEach(function (nv) {
+        if (!nv.children.length) {
+          nv.classList.add("ms-drawer-footer-hidden");
+          var pv = nv.previousElementSibling;
+          if (pv && pv.tagName === "DAP-DS-DIVIDER") pv.classList.add("ms-drawer-footer-hidden");
+        }
+      });
+    }
+    // React-es fiok: "Jogi hirek" -> "Hirek" (magyar)
+    if (PAGE_LANG === "hu") {
+      var newsEl = D.querySelector('dap-ds-sidenav-item.header-mobile-sidenav-item[href="/jogszabalyi-aktualitasok"]');
+      if (newsEl && newsEl.firstChild && newsEl.firstChild.nodeType === 3 && newsEl.firstChild.nodeValue.trim() === "Jogi hírek") newsEl.firstChild.nodeValue = "Hírek";
+    }
     // React-es fiok: a kulon "Jogi MI kereso" menupont elrejtese, a Kezdolap felirata "Jogi MI kereso"
     var srch = D.querySelector('dap-ds-sidenav-item.header-mobile-sidenav-item[href$="/jogi-informacio-kereso"]');
     if (srch) {
@@ -958,6 +1431,7 @@
   // Ugyanaz a megjelenes es mukodes, mint a dap.gov.hu-n (c-dimop-logo): jobb also sarokban
   // fix doboz, a gomb bezarja, es a bezaras a munkamenetre (sessionStorage) megjegyzodik.
   // A React altal renderelt elemet helyben alakitjuk (nincs masolat), a kep csak src-t kap.
+  var SZ_CLOSE_LABEL = { hu: "Széchenyi Terv Plusz ablak bezárás", en: "Close Széchenyi Terv Plusz window", de: "Széchenyi Terv Plusz-Fenster schließen", fr: "Fermer la fenêtre Széchenyi Terv Plusz", es: "Cerrar la ventana Széchenyi Terv Plusz", it: "Chiudi la finestra Széchenyi Terv Plusz", zh: "关闭 Széchenyi Terv Plusz 窗口" };
   var CLOSE_LABEL = { hu: "Bezárás", en: "Close", de: "Schließen", fr: "Fermer", es: "Cerrar", it: "Chiudi", zh: "关闭" };
   var DIMOP_KEY = "dimop-logo-dismissed";
   function dimopLogo() {
@@ -977,7 +1451,17 @@
     var btn = D.createElement("dap-ds-button");
     btn.setAttribute("data-ms-dimop-close", "");
     btn.setAttribute("shape", "circle"); btn.setAttribute("variant", "primary"); btn.setAttribute("size", "xs");
-    btn.setAttribute("aria-label", CLOSE_LABEL[PAGE_LANG] || CLOSE_LABEL.en);
+    var szLabel = SZ_CLOSE_LABEL[PAGE_LANG] || SZ_CLOSE_LABEL.en;
+    btn.setAttribute("aria-label", szLabel);
+    // a nev csak a belso <button>-on legyen (a kulso host elemen "csoportkent" is bemondana)
+    onShadow(btn, function (root) {
+      var ib = root.querySelector("button");
+      if (!ib) return;
+      var fix = function () { if (ib.getAttribute("aria-label") !== szLabel) ib.setAttribute("aria-label", szLabel); if (btn.hasAttribute("aria-label")) btn.removeAttribute("aria-label"); };
+      fix();
+      new MutationObserver(fix).observe(ib, { attributes: true, attributeFilter: ["aria-label"] });
+      new MutationObserver(fix).observe(btn, { attributes: true, attributeFilter: ["aria-label"] });
+    });
     btn.className = "ms-dimop-close";
     btn.innerHTML = '<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path fill="currentColor" d="m12 10.587l4.95-4.95l1.414 1.414l-4.95 4.95l4.95 4.95l-1.415 1.414l-4.95-4.95l-4.949 4.95l-1.414-1.415l4.95-4.95l-4.95-4.95L7.05 5.638z"></path></svg>';
     btn.addEventListener("click", function () {
@@ -999,13 +1483,48 @@
     nav.insertBefore(bar, nav.children[1] || null);   // logo | fomenu | nyelvvalaszto: egy sorban
   }
 
+  /* ===== Suti-/EIR-tajekoztato minden betolteskor (a React nelkuli oldalakon is) ===== */
+  // A React-es oldalakon a tajekoztato a kliensben nyilik meg minden betolteskor; a kezdolap es a kereso
+  // oldalak React nelkul futnak, ezeken ugyanazzal a tartalommal/kinezettel itt epitjuk fel. A "Rendben"
+  // bezarja; nem jegyezzuk meg, ezert frissiteskor ujra megjelenik.
+  var CONSENT = {"hu": {"cookie": "A weboldal a működéshez és a szolgáltatás zavartalan biztosításához személyes adatokat tárol az Ön böngészőjében. Az ebbe a csoportba tartozó sütik használata elengedhetetlen az oldalon, ezeket csak időszakosan tudja törölni.", "eir": "A rendszer használatával a felhasználó tudomásul veszi, hogy a szervezet információs erőforrásait (EIR) veszi igénybe, amelynek működését biztonsági és üzemeltetési célból megfigyelhetik, rögzíthetik és naplózhatják. A rendszer jogosulatlan vagy rendeltetésellenes használata tilos, és büntető- vagy polgári jogi felelősséget vonhat maga után.", "button": "Rendben"}, "en": {"cookie": "This website stores personal data in your browser for proper operation and uninterrupted service. The use of these cookies is essential; you can only delete them temporarily.", "eir": "By using the system, you acknowledge the utilisation of the organization's information resources (EIR) the operation of which may be monitored, recorded, and logged for security and operational purposes. Unauthorized or improper use of the system is prohibited and may result in criminal or civil liability.", "button": "OK"}, "de": {"cookie": "Die Website speichert personenbezogene Daten in Ihrem Browser, um den Betrieb zu gewährleisten und einen unterbrechungsfreien Service sicherzustellen. Die Verwendung von Cookies dieser Gruppe ist für die Website unerlässlich, sie können nur zeitweise gelöscht werden.", "eir": "Durch die Nutzung des Systems bestätigt der Nutzer, dass er die Informationsressourcen (EIR) der Organisation nutzt, deren Betrieb aus Sicherheits- und Betriebsgründen überwacht, gespeichert und protokolliert werden kann. Die unbefugte oder unsachgemäße Nutzung ist untersagt und kann straf- oder zivilrechtliche Folgen nach sich ziehen.", "button": "OK"}, "fr": {"cookie": "Le site enregistre des données personnelles dans votre navigateur pour son fonctionnement. L'utilisation des cookies de ce groupe est essentielle ; vous ne pouvez les supprimer que périodiquement.", "eir": "En utilisant le système, l'utilisateur reconnaît utiliser les ressources d'information (EIR) de l'organisation, dont le fonctionnement peut être surveillé, enregistré et consigné à des fins de sécurité et d'exploitation. Toute utilisation non autorisée ou abusive est interdite et peut entraîner des responsabilités civiles ou pénales.", "button": "OK"}, "it": {"cookie": "Il sito web memorizza dati personali nel Suo browser per garantire il corretto funzionamento e la continuità del servizio. I cookie appartenenti a questo gruppo sono essenziali per il funzionamento del sito e possono essere cancellati solo periodicamente.", "eir": "Utilizzando il sistema, l’utente riconosce di avvalersi delle risorse informative (EIR) dell’organizzazione, il cui utilizzo può essere monitorato, registrato e tracciato per motivi operativi e di sicurezza. L’uso non autorizzato o improprio del sistema è vietato e può comportare responsabilità penale e/o civile.", "button": "OK"}, "zh": {"cookie": "网站为了运行和提供不间断服务，会在您的浏览器中存储个人数据。此类别跟踪器的使用对网站至关重要，，您只能定期完成删除", "eir": "使用本系统即表示用户知悉正在使用组织的信息资源（EIR），出于安全和运营目的，其运行状况可能会被监控、记录和日志化。禁止未经授权或违反用途的系统使用，否则可能导致刑事或民事法律责任。", "button": "确定"}, "es": {"cookie": "El sitio web almacena datos personales en su navegador para su funcionamiento y para garantizar la prestación ininterrumpida del servicio. Las cookies de este grupo son esenciales; solo puede eliminarlas periódicamente.", "eir": "Al usar el sistema, el usuario reconoce que utiliza los recursos de información (EIR) de la organización, cuyo funcionamiento puede ser supervisado y registrado con fines de seguridad. El uso no autorizado o indebido del sistema está prohibido y puede conllevar responsabilidad penal o civil.", "button": "Aceptar"}};
+  var consentOffered = false;
+  /* ===== Suti-tajekoztato: csak a fejlec logojara kattintas utan jelenik meg (egyszer; bezaras utan nem nyilik ujra) ===== */
+  var CONSENT_KEY = "ms-consent-offer";
+  function consentWanted() {
+    try { var v = +sessionStorage.getItem(CONSENT_KEY); return v > 0 && Date.now() - v < 12000; } catch (e) { return false; }
+  }
+  // window fogo fazis: az offline-nav-fix (dokumentum fogo fazis) stopImmediatePropagation-t hiv, ezert elotte kell futni
+  window.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (a && a.querySelector("img.header-logo-beta")) { try { sessionStorage.setItem(CONSENT_KEY, String(Date.now())); } catch (er) {} }
+  }, true);
+  function consentOffer() {
+    if (consentOffered) return;
+    if (!D.getElementById("mock-search-bar")) return;                        // csak a React nelkuli oldalakon
+    if (!consentWanted()) return;                                            // csak a logora kattintas utan
+    if (D.querySelector(".a11y-consent-banner")) { consentOffered = true; return; }
+    consentOffered = true;
+    var T = CONSENT[PAGE_LANG] || CONSENT.en;
+    var b = D.createElement("div");
+    b.className = "fixed flex flex-col gap-(--dds-spacing-400) p-(--dds-spacing-400) lg:p-(--dds-spacing-600) bg-white z-40 bottom-[15px] mx-(--dds-spacing-400) lg:bottom-[55px] lg:right-[35px] rounded-(--dds-radius-base) max-w-[950px] shadow-xl/35 lg:shadow-xl/15";
+    b.setAttribute("data-ms-consent", "");
+    b.innerHTML = '<div class="dds-typography typography-body dds-typography-size--sm">' + esc(T.cookie) +
+      '<p class="pt-(--dds-spacing-400) lg:mb-[-25px]">' + esc(T.eir) + '</p></div>' +
+      '<div class="flex flex-col lg:flex-row w-full justify-center lg:justify-end"><button class="dds-button dds-button--primary dds-button--sm dds-button-square dds-dark-outer-ring uppercase">' + esc(T.button) + '</button></div>';
+    b.querySelector("button").addEventListener("click", function () { try { sessionStorage.removeItem(CONSENT_KEY); } catch (e) {} b.remove(); schedule(); });
+    D.body.appendChild(b);
+    schedule();
+  }
+
   /* ======================================================== futtatas */
   function run() {
     try { skipLink(); } catch (e) { console.warn("[a11y] skipLink", e); }
     try { dimopLogo(); } catch (e) { console.warn("[a11y] dimopLogo", e); }
+    try { consentOffer(); } catch (e) { console.warn("[a11y] consentOffer", e); }
     try { drawerFooter(); } catch (e) { console.warn("[a11y] drawerFooter", e); }
     try { usefulLinks(); } catch (e) { console.warn("[a11y] usefulLinks", e); }
-    try { mainNav(); oneNav(); } catch (e) { console.warn("[a11y] mainNav", e); }
+    try { mainNav(); hideSourceNav(); oneNav(); } catch (e) { console.warn("[a11y] mainNav", e); }
     try { langMenu(); } catch (e) { console.warn("[a11y] langMenu", e); }
     try { landmarks(); } catch (e) { console.warn("[a11y] landmarks", e); }
     try { headings(); } catch (e) { console.warn("[a11y] headings", e); }
@@ -1018,6 +1537,9 @@
     try { langDialog(); } catch (e) { console.warn("[a11y] langDialog", e); }
     try { consentBanner(); } catch (e) { console.warn("[a11y] consentBanner", e); }
     try { noticeDialogs(); } catch (e) { console.warn("[a11y] noticeDialogs", e); }
+    try { errorScreen(); } catch (e) { console.warn("[a11y] errorScreen", e); }
+    try { footerPageTitle(); } catch (e) { console.warn("[a11y] footerPageTitle", e); }
+    try { navButtons(); } catch (e) { console.warn("[a11y] navButtons", e); }
     try { mobileMenu(); } catch (e) { console.warn("[a11y] mobileMenu", e); }
     try { focusRings(); } catch (e) { console.warn("[a11y] focusRings", e); }
     try { gazetteLinks(); } catch (e) { console.warn("[a11y] gazetteLinks", e); }
@@ -1030,6 +1552,24 @@
   }
   var obs = new MutationObserver(schedule);
   function observe() { obs.observe(D.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style", "hidden", "open"] }); }
+
+  /* ===== Link megnyitasakor (pl. lablec-linkek) az oldal teteje ===== */
+  // Uj oldal (nem vissza/frissites, nincs #horgony) mindig az oldal tetejen indul; a betoltes / hidratacio /
+  // kesleltetett elrendezes utan sem ugrik lejjebb, amig a felhasznalo maga nem gorget.
+  (function () {
+    try {
+      var nav = performance.getEntriesByType("navigation")[0];
+      if (!nav || nav.type !== "navigate" || location.hash) return;
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      var touched = false;
+      ["wheel", "touchstart", "keydown", "mousedown"].forEach(function (ev) { window.addEventListener(ev, function () { touched = true; }, { passive: true, once: true }); });
+      var top = function () { if (!touched && window.scrollY > 0) window.scrollTo(0, 0); };
+      top();
+      window.addEventListener("DOMContentLoaded", top);
+      window.addEventListener("load", top);
+      [150, 600, 1500].forEach(function (t) { setTimeout(top, t); });
+    } catch (e) {}
+  })();
 
   whenReady(function () {
     run();
