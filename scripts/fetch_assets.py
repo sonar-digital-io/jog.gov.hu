@@ -6,7 +6,7 @@ webkomponensek nem allnak fel es "torott" lesz a CSS. Fusd a mirror.py utan."""
 import os, re, glob, urllib.request
 
 BASE = "https://jog.gov.hu"
-ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "www", "assets")
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36"
 EXT = r"(?:js|css|svg|png|jpg|jpeg|webp|woff2?|json|ico)"
 REL = re.compile(r'["\'(]\./([A-Za-z0-9._-]+\.' + EXT + r')')

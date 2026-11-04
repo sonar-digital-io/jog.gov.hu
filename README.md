@@ -8,7 +8,7 @@ eredeti `/assets/` és `/files/` útvonalon vannak elmentve.
 
 ## Indítás / build / teszt
 
-**Legegyszerűbb:** dupla kattintás a `..\start.bat`-ra → elindul a szerver és
+**Legegyszerűbb:** dupla kattintás a `start.bat`-ra → elindul a szerver és
 megnyílik a böngészőben. Leállítás: az ablak bezárása.
 
 **npm-mel** (a projekt gyökeréből, `C:\code\jog.gov.hu`):
@@ -24,7 +24,7 @@ A `scripts/` mappa tartalma: `serve.py` (szerver), `mirror.py` (oldalak letölt�
 `fetch_assets.py` (lazy JS chunkok), `smoke_test.py` (teszt). Nincs npm függőség,
 minden Python-ból fut (node/npm csak a kényelmi felület).
 
-**Munkafolyamat változtatásnál:** szerkeszd a `www/` alatti fájlokat → `npm start`
+**Munkafolyamat változtatásnál:** szerkeszd a repó gyökerében lévő oldalfájlokat → `npm start`
 fut közben csak frissítsd a böngészőt (statikus, nincs újrafordítás). Ha a live
 oldalról akarsz friss állapotot: `npm run build`, majd `npm test`.
 
@@ -59,7 +59,7 @@ JS-t újra kellene bundle-özni klasszikus scriptté – az az alkalmazás újra
 
 A dupla-kattintással (`file://`) megnyitott oldal **eltört CSS-t** mutat, mert az
 abszolút `/assets/...` útvonalak nem oldódnak fel. Mindig a fenti `http.server`-rel
-(vagy bármely statikus szerverrel) nyisd meg a `www/` gyökérből.
+(vagy bármely statikus szerverrel) nyisd meg a repó gyökeréből.
 
 A design systemet (`dap-ds-*` web componentek) a `assets/dds-*.js` chunk definiálja;
 ez most le van töltve, így a layout helyesen renderel (132/132 komponens feláll).

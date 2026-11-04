@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Statikus szerver a www/ tukorhoz + bongeszo megnyitasa.  Hasznalat: python scripts/serve.py [port]"""
+"""Statikus szerver a tukorhoz (repo gyoker) + bongeszo megnyitasa.  Hasznalat: python scripts/serve.py [port]"""
 import http.server, os, sys, threading, webbrowser
 
-ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "www")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8799
 
 os.chdir(ROOT)
