@@ -8,12 +8,22 @@ jog.gov.hu /ai backendjet. A hianyzo kliens-oldali API-hivasok (a nem keresos
 oldalak dinamikus reszei) 404-et adnak - ez a statikus tukor termeszetes
 korlatja, a megjelenest nem befolyasolja.
 
+Felolvaso-szimulator: a /__sr-sim/ utvonal kozvetlenul a modules/sr-sim/src forrasbol
+szolgalodik ki (scripts/patch_sr_sim.py koti be az oldalakba; Alt+A kapcsolja).
+
+Automatikus ujratoltes: a szerver figyeli az oldal- es a szimulator-fajlokat; mentes utan
+a bongeszo magatol ujratolt (CSS valtozasnal csak a stiluslapot csereli, az oldal allapota marad).
+A kliens-scriptet a szerver menet kozben szurja a HTML-be, a fajlokhoz nem nyul.
+
 Hasznalat:
     python3 scripts/serve.py [port] [--no-open]
 """
 import http.server
+import io
+import json
 import os
 import posixpath
+import time
 import re
 import sys
 import threading
@@ -35,11 +45,113 @@ def _canonical_query(q):
 
 
 NOT_SITE = {"scripts", "node_modules", "__fixtures", "modules", "tests", "docs", ".git", ".claude",
+            "test-results", "playwright-report",
             "package.json", "package-lock.json", "start.bat", "README.md", ".gitignore"}
+
+# A felolvaso-szimulator (modules/sr-sim) kozvetlenul a forrasbol szolgalodik ki.
+# Hosszabb prefix elol: a vendor ut a /__sr-sim/ ala esik.
+SIM_SRC = os.path.join(ROOT, "modules", "sr-sim", "src")
+ALIASES = [
+    ("/__sr-sim/vendor/dom-accessibility-api/", os.path.join(ROOT, "node_modules", "dom-accessibility-api", "dist")),
+    ("/__sr-sim/", SIM_SRC),
+]
+
+LIVERELOAD_JS = b"""<script>/*livereload*/(function(){var down=false,es=new EventSource("/__livereload");
+es.onerror=function(){down=true};es.onopen=function(){if(down)location.reload()};
+es.onmessage=function(e){var m=JSON.parse(e.data);if(m.type!=="css")return location.reload();
+var hit=false;document.querySelectorAll('link[rel="stylesheet"]').forEach(function(l){var u=new URL(l.href);
+if(u.pathname===m.path){hit=true;u.searchParams.set("lr",Date.now());l.href=u.href}});if(!hit)location.reload()}})();</script>"""
+
+
+class Watcher:
+    """Fel masodpercenkent vegignezi az oldal- es szimulator-fajlok mtime-jat.
+    ponytail: polling, nem OS-esemeny - nagy fa eseten watchdog/ReadDirectoryChangesW kellene."""
+
+    def __init__(self):
+        self.cond = threading.Condition()
+        self.version = 0
+        self.last = None  # az utolso valtozas uzenete
+        self.mtimes = self.scan()
+
+    def scan(self):
+        out = {}
+        for base in (ROOT, SIM_SRC):
+            for root, dirs, files in os.walk(base):
+                # a repo gyoker az oldal gyokere: a nem-oldal mappakat (a szimulatort kulon figyeljuk) kihagyjuk
+                dirs[:] = [d for d in dirs if not d.startswith(".") and d not in NOT_SITE]
+                for f in files:
+                    full = os.path.join(root, f)
+                    try:
+                        out[full] = os.stat(full).st_mtime
+                    except OSError:
+                        pass
+        return out
+
+    def url_of(self, full):
+        for prefix, base in ALIASES + [("/", ROOT)]:
+            if full.startswith(base + os.sep):
+                return prefix + os.path.relpath(full, base).replace(os.sep, "/")
+        return None
+
+    def run(self):
+        while True:
+            time.sleep(0.5)
+            now = self.scan()
+            changed = [f for f in set(now) | set(self.mtimes) if now.get(f) != self.mtimes.get(f)]
+            self.mtimes = now
+            if not changed:
+                continue
+            if all(f.endswith(".css") for f in changed):
+                msgs = [{"type": "css", "path": self.url_of(f)} for f in changed]
+            else:
+                msgs = [{"type": "reload"}]
+            with self.cond:
+                self.version += 1
+                self.last = msgs
+                self.cond.notify_all()
+
+
+WATCHER = None
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     server_version = "jog-mirror/2.1"
+    # Windowson a .js MIME-tipusa a registrybol jon (neha text/plain) - modul scriptnel ez vegzetes
+    extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map,
+                      ".js": "text/javascript", ".mjs": "text/javascript"}
+
+    def do_GET(self):
+        if self.path.startswith("/__livereload"):
+            return self.livereload()
+        return super().do_GET()
+
+    def livereload(self):
+        """Server-Sent Events: valtozaskor uzenet a bongeszonek; 15 mp-enkent ping (igy derul ki, ha bezartak)."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.end_headers()
+        seen = WATCHER.version
+        try:
+            while True:
+                with WATCHER.cond:
+                    WATCHER.cond.wait_for(lambda: WATCHER.version != seen, timeout=15)
+                    msgs = WATCHER.last if WATCHER.version != seen else None
+                    seen = WATCHER.version
+                payload = "".join("data: %s\n\n" % json.dumps(m) for m in msgs) if msgs else ": ping\n\n"
+                self.wfile.write(payload.encode("utf-8"))
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            pass
+
+    def translate_path(self, path):
+        clean = unquote(path.split("?", 1)[0].split("#", 1)[0])
+        for prefix, base in ALIASES:
+            if clean.startswith(prefix):
+                rel = os.path.normpath(clean[len(prefix):]).lstrip("\\/")
+                if rel == "." or rel.startswith(".."):
+                    break  # ne lehessen kilepni a mappabol
+                return os.path.join(base, rel)
+        return super().translate_path(path)
 
     def send_head(self):
         """Ket kiegeszites a sima statikus kiszolgalashoz:
@@ -75,8 +187,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if os.path.isfile(snap):
                     return self._send_file(snap)
             index = os.path.join(base, "index.html")
-            if not parts.path.endswith("/") and os.path.isfile(index):
-                return self._send_file(index)
+            if os.path.isfile(index):
+                if not parts.path.endswith("/"):
+                    return self._send_file(index)
+                base = index
+        if base.endswith(".html") and os.path.isfile(base):
+            return self._send_file(base)  # minden HTML ezen at: kap ujratolto scriptet
         return super().send_head()
 
     def _send_fixture(self, parts):
@@ -115,13 +231,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return f
 
     def _send_file(self, path):
-        f = open(path, "rb")
-        st = os.fstat(f.fileno())
+        """HTML kiszolgalasa; menet kozben beszurja az ujratolto scriptet (a fajlhoz nem nyul)."""
+        with open(path, "rb") as f:
+            body = f.read()
+        i = body.lower().rfind(b"</body>")
+        body = body[:i] + LIVERELOAD_JS + body[i:] if i != -1 else body + LIVERELOAD_JS
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(st.st_size))
+        self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        return f
+        return io.BytesIO(body)
 
     def list_directory(self, path):
         self.send_error(404)
@@ -134,7 +253,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 def build_server(port=None):
+    global WATCHER
     os.chdir(ROOT)
+    if WATCHER is None:
+        WATCHER = Watcher()
+        threading.Thread(target=WATCHER.run, daemon=True).start()
+    http.server.ThreadingHTTPServer.daemon_threads = True  # a nyitott livereload-kapcsolatok ne tartsak fel a leallitast
     http.server.ThreadingHTTPServer.allow_reuse_address = True
     return http.server.ThreadingHTTPServer(("127.0.0.1", port or PORT), Handler)
 

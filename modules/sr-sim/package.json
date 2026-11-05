@@ -1,0 +1,11 @@
+{
+  "name": "@sonar/sr-sim",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kepernyoolvaso-szimulator: megmutatja, milyen sorrendben es tempoval olvasna fel egy felolvaso az oldalt (H / D / Tab / nyilak), es jelzi a hibakat.",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "dom-accessibility-api": "^0.7.0"
+  }
+}

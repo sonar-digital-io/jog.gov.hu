@@ -14,3 +14,7 @@ scratchpad/
 
 # python
 __pycache__/
+
+# playwright tesztek kimenete
+test-results/
+playwright-report/
