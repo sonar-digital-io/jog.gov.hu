@@ -1,0 +1,457 @@
+/* a11y-fixes.css
+ * Akadalymentesitesi javitasok stilusai a jog.gov.hu tukorhoz.
+ * A hozza tartozo viselkedes: a11y-fixes.js. Beszurja: scripts/patch_a11y.py.
+ *
+ * Minden szabaly a renderelt DOM-ra hat (a React-hidratacio nem irja felul),
+ * ezert a szerkezeti valtoztatasokat (fomenu stb.) a JS vegzi futasidoben.
+ */
+
+/* ---------- segedosztaly: csak felolvasonak lathato szoveg ---------- */
+.a11y-sr-only {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+  clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important;
+  white-space: nowrap !important; border: 0 !important;
+}
+
+/* ---------- Ugras a fo tartalomra (WCAG 2.4.1) ----------
+ * translateY(-100%) teljesen kiviszi a kepernyorol (a korabbi top:-40px alatt a
+ * link also resze kilogott a bal felso sarokban). Fokuszra lathatova valik. */
+.skip-to-content {
+  position: absolute; top: 0; left: 0; z-index: 10000;
+  transform: translateY(-110%);
+  padding: 12px 20px;
+  background: #0b3d3e; color: #fff;
+  font-weight: 600; text-decoration: none;
+  border-radius: 0 0 8px 0;
+  transition: transform .15s ease-in-out;
+}
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid #37f0bf; outline-offset: -3px;
+}
+main[tabindex="-1"]:focus { outline: none; }
+
+/* ---------- Egyseges fokuszjelzes (WCAG 2.4.7) ----------
+ * Minden gomb es link ugyanazt a gyurut kapja, mint a design system komponensei
+ * (legordulok, mezok): 2px menta (#37f0bf), 2px tavolsaggal. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+summary:focus-visible {
+  outline: 2px solid #37f0bf !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Szemantikus fomenu (a DS-menu helyett; WCAG 2.1.1, 4.1.2) ----------
+ * Az eredeti DS-menut (nav > dap-ds-navigation-menu.main-navigation) CSS-sel
+ * rejtjuk el - a DOM-hoz nem nyulunk, igy a React-hidratacio nem tori el. */
+nav:has(> dap-ds-navigation-menu.main-navigation):not(.ms-mainnav) { display: none !important; }
+
+.ms-mainnav { display: block; }
+.ms-mainnav-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 24px;
+  height: 68px;
+}
+.ms-mainnav-list > li { position: relative; display: flex; align-items: center; height: 100%; }
+.ms-nav-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 10px; border-radius: var(--dds-radius-base, 8px);
+  color: #fff; text-decoration: none;
+  font-family: inherit; font-size: 16px; line-height: 1.2; font-weight: 500; /* mint elesen */
+  background: transparent; border: 0; cursor: pointer; white-space: nowrap;
+}
+.ms-nav-link:hover { background: rgba(255, 255, 255, .12); }
+/* sotet savon a zold gyuru jol latszik (8,2:1) */
+.ms-nav-link:focus-visible {
+  outline: 2px solid #37f0bf !important; outline-offset: 2px !important; box-shadow: none !important;
+}
+.ms-mainnav-list > li.is-active > .ms-nav-link,
+.ms-mainnav-list > li.is-active > .ms-nav-link:hover { background: #38e0ac; color: #0b3d3e; }
+.ms-chevron, .ms-ext-icon { flex: 0 0 auto; }
+.ms-chevron { width: 18px; height: 18px; transition: transform .12s ease; }
+.ms-has-sub.is-open > .ms-sub-trigger .ms-chevron { transform: rotate(180deg); }
+.ms-ext-icon { width: 15px; height: 15px; }
+
+.ms-submenu {
+  list-style: none; margin: 0; padding: 6px;
+  position: absolute; top: 100%; left: 0; min-width: 230px;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 18px 40px -16px rgba(11, 61, 62, .40);
+  opacity: 0; visibility: hidden; transform: translateY(4px);
+  transition: opacity .12s ease, transform .12s ease, visibility 0s .12s;
+  z-index: 60;
+}
+/* csak kattintasra / Enterre nyilik (hoverre nem) */
+.ms-has-sub.is-open > .ms-submenu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+  transition: opacity .12s ease, transform .12s ease, visibility 0s 0s;
+}
+.ms-submenu > li { display: block; }
+.ms-submenu a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px;
+  color: #404753; text-decoration: none;
+  font-size: 16px; line-height: 1.3; white-space: nowrap;
+}
+.ms-submenu a:hover { background: #edf4f2; }
+/* feher alapon sotet keret: ~12:1 (korabban #37f0bf ~1,5:1 volt) */
+.ms-submenu a:focus-visible {
+  outline: 2px solid #37f0bf !important; outline-offset: -2px !important; box-shadow: none !important;
+}
+
+/* ---------- Szechenyi Terv Plusz logo (WCAG 2.4.11) ----------
+ * Az eredeti oldallal azonos megjelenes: a logo rogzitett (fixed) marad.
+ * A fokusz eltakarasat a JS kezeli (focusin -> gorgetes a logo fole). */
+
+/* ---------- Suti-/EIR-tajekoztato (WCAG 2.4.11) ----------
+ * Ne foglalja el az egesz kepernyot kis kijelzon; a fokuszalt elemet a JS
+ * (focusin) gorgeti ki a sav mogul. */
+
+
+/* Suti-/EIR-tajekoztato: a njt.jog.gov.hu cookie-savjanak kinezete (tartalom valtozatlan):
+ * a kepernyo aljan teljes szelessegben, sotet (#1C1F26) hatterrel, fehér 16/24 szoveggel, bal oldalt info ikonnal,
+ * kozepre igazitva, jobb oldalt mint (#37F0BF) gombbal. */
+.a11y-consent-banner, [data-ms-consent] {
+  position: fixed !important; left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
+  width: 100% !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+  background: #1c1f26 !important; color: #fff !important; z-index: 90000 !important;
+  display: flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 40px;
+  padding: 20px 28.5px !important; box-sizing: border-box; max-height: 45vh; overflow-y: auto;
+}
+.a11y-consent-banner::before, [data-ms-consent]::before {
+  content: ""; flex: 0 0 24px; width: 24px; height: 24px; align-self: flex-start; margin-right: -24px;
+  background: no-repeat center / 24px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM11 11V17H13V11H11ZM11 7V9H13V7H11Z'/%3E%3C/svg%3E");
+}
+.a11y-consent-banner > div:first-child, [data-ms-consent] > div:first-child {
+  flex: 0 1 auto; max-width: 1240px; color: #fff; font-size: 16px; line-height: 24px; font-weight: 500;
+}
+.a11y-consent-banner > div:first-child p, [data-ms-consent] > div:first-child p { margin: 0 !important; padding-top: 8px !important; }
+.a11y-consent-banner > div:last-child, [data-ms-consent] > div:last-child { flex: 0 0 auto; width: auto !important; margin: 0 !important; padding: 0 !important; position: static !important; background: transparent !important; }
+.a11y-consent-banner button, [data-ms-consent] button {
+  background: #38e0ac !important; color: #0b3d3e !important; border: 0 !important; border-radius: 8px !important;
+  padding: 12px 16px !important; font: 700 16px/normal Inter, sans-serif !important; text-transform: none !important; cursor: pointer; white-space: nowrap;
+}
+.a11y-consent-banner button:hover, [data-ms-consent] button:hover { background: #33cc9d !important; }
+.a11y-consent-banner button:focus-visible, [data-ms-consent] button:focus-visible { outline: 2px solid #fff !important; outline-offset: 2px; }
+@media (max-width: 1023.98px) {
+  .a11y-consent-banner, [data-ms-consent] { flex-direction: column !important; align-items: stretch; gap: 16px; padding: 16px !important; }
+  .a11y-consent-banner::before, [data-ms-consent]::before { display: none; }
+  .a11y-consent-banner, [data-ms-consent] { max-height: 60vh; }
+  /* ha a szoveg gorgetni kell, a gomb mindig latszik */
+  .a11y-consent-banner > div:last-child, [data-ms-consent] > div:last-child {
+    align-self: stretch; position: sticky !important; bottom: -16px; margin-bottom: -16px !important; padding: 8px 0 16px !important; background: #1c1f26 !important;
+  }
+  .a11y-consent-banner button, [data-ms-consent] button { width: 100%; }
+}
+
+/* ---------- Lablec-linkek celterulete (WCAG 2.5.8) ---------- */
+footer nav a {
+  display: inline-flex; align-items: center;
+  min-height: 24px; padding-block: 4px;
+}
+
+/* ertesito-dialogok: a tarolo maga kapja a fokuszt (a felolvaso bemondja), keret nelkul;
+ * a gombokon a szokasos fokuszgyuru latszik */
+.a11y-notice-dialog:focus { outline: none; }
+
+.ms-drawer-footer-hidden { display: none !important; }
+
+/* Hirlevel-feliratkozas blokk: ha nincs mellette masik kartya, a tartalom teljes szelessegeben
+   jelenik meg, a "Feliratkozom" gomb jobbra (mobilon marad egymas alatt). */
+[class*="_subscriptionCardInner_"]:has(> :only-child) { width: 100%; }
+@media (min-width: 48rem) {
+  [class*="_subscriptionCardInner_"]:has(> :only-child) [class*="_subscriptionCardInnerText_"] {
+    flex-direction: row; align-items: center; justify-content: space-between; column-gap: var(--dds-spacing-800);
+  }
+}
+/* ...es a zold blokk a tartalmahoz igazodik (nincs min-magassag, egyenletes belso margo), a tartalom kozepre igazitva */
+[class*="_subscriptionCardInner_"]:has(> :only-child) > .card-medium { min-height: 0; display: flex; align-items: center; }
+[class*="_subscriptionCardInner_"]:has(> :only-child) [class*="_subscriptionCardInnerText_"] { width: 100%; padding: var(--dds-spacing-700); align-items: center; }
+
+/* Mobil/asztali torespont 1024 px (eredetileg 1280 px / xl): 1024-1343 px kozott a 1312 px-es
+   fejlec-kontener nem fer el, ezert a viewporthoz igazodik (nincs vizszintes gorgetes). */
+@media (min-width: 64rem) {
+  .xl\:w-\[1312px\] { max-width: calc(100vw - 32px); }
+}
+
+/* Szechenyi Terv Plusz / DIMOP logo (a dap.gov.hu c-dimop-logo mintajara): jobb also sarokban, mindig */
+.ms-dimop-logo { position: fixed; right: 0; bottom: 0; left: auto !important; top: auto !important; padding: var(--dds-spacing-600); z-index: 20; }
+.ms-dimop-logo img {
+  display: block; max-width: calc(100vw - 2 * var(--dds-spacing-600)); height: auto;
+  background-color: var(--dds-background-neutral-subtle, #fff); padding: var(--dds-spacing-400) var(--dds-spacing-600);
+  border-radius: var(--dds-radius-base); box-shadow: 0 6.91px 10.36px -1.73px #00000014; box-sizing: content-box;
+}
+.ms-dimop-close { position: absolute; top: calc(var(--dds-spacing-600) - var(--dds-spacing-300)); right: calc(var(--dds-spacing-600) - var(--dds-spacing-300)); }
+
+/* "Vissza az elozo oldalra" link a hibaoldalon ("Varatlan hiba tortent." / 404) */
+.ms-error-back {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: center;
+  margin-top: 32px; font-size: 20px; font-weight: 500; color: #2f7466; text-decoration: underline;
+  text-underline-offset: 6px; text-decoration-thickness: 2px;
+}
+.ms-error-back:hover { color: #0b3d3e; }
+.ms-error-back:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 4px; border-radius: 4px; }
+
+/* Egyetlen navigacios szekcio: logo | fomenu | nyelvvalaszto egy sorban a fejlec <nav>-jaban */
+@media (min-width: 64rem) {
+  nav.header-upper.ms-onenav { align-items: center; flex-wrap: nowrap; gap: var(--dds-spacing-400); }
+  nav.header-upper.ms-onenav > .ms-onenav-bar { flex: 1 1 auto; min-width: 0; margin: 0; }
+  nav.header-upper.ms-onenav > div.justify-center { display: none; }   /* a regi (ures) felso linksor helye */
+}
+
+/* a fomenu-sav nem kap sotetebb arnyalatu hatteret (az eredeti bg-black/30 helyett atlatszo) */
+.ms-onenav-bar, .ms-onenav-bar > div { background-color: transparent !important; }
+/* ...es nincs elmosas (backdrop-blur) sem a fomenu mogott: teljesen atlatszo */
+.ms-onenav-bar, .ms-onenav-bar * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.ms-onenav-bar > div[class*="backdrop-blur"] { display: none !important; }
+
+/* ---------- Egységes oldalmargó / tartalomszélesség (a njt.jog.gov.hu .wrapper mintájára) ----------
+ * Minden szekció (fejléc, hero, tartalom, lábléc) tartalma ugyanabban a 1200 px széles, középre
+ * igazított oszlopban van; 1200 px alatt a tartalom teljes szélességű, 16 px oldalmargóval.
+ * A 1232 px = 1200 px tartalom + 2 x 16 px belső margó. */
+@media (min-width: 64rem) {
+  .xl\:w-\[1312px\] { width: 1200px !important; max-width: calc(100vw - 32px) !important; }
+  nav.header-upper { padding-inline: 0 !important; }
+}
+.max-w-\[1090px\] { max-width: 1200px !important; }
+[class*="_gazetteTypeSwitcher_"], [class*="_cardContainer_"], [class*="_promotedInformationalTitle_"],
+[class*="_informationalCards_"], [class*="_subscriptionCardInner_"] { max-width: 1232px !important; }
+[class*="_footerContentInner_"] { max-width: 1232px; margin-inline: auto; }
+[class*="_footerContentInner_"] { padding-inline: 16px; }
+/* a Közlöny-kartyasor (nyilakkal) kartyai is a 1200 px-es oszlopra illeszkednek: 51 px nyil + 1232 px + 51 px */
+@media (min-width: 64rem) {
+  [class*="_latestGazettes_"] { padding-inline: 16px !important; }
+  [class*="_scrollerContainer_"] { width: min(1334px, 100%) !important; max-width: none !important; margin-inline: auto; }
+}
+/* az utolso menupont legordulo panelje jobbra igazodik (ne logjon ki a kepernyorol) */
+.ms-mainnav-list > li:last-child > .ms-submenu { left: auto; right: 0; }
+
+/* Lablec mindig a kepernyo aljan (rovid tartalomnal is); a main kitolti a maradek helyet */
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; }
+body > footer { margin-top: auto; flex: 0 0 auto; }
+/* kezdolap: a hero hattere kitolti a main teljes magassagat */
+main:has(.ms-searchbar-wrap.ms-on-dark) { min-height: 0; }
+main:has(.ms-searchbar-wrap.ms-on-dark) > div.relative { flex: 1 0 auto; display: flex; flex-direction: column; }
+main:has(.ms-searchbar-wrap.ms-on-dark) [class*="_hero_"] { flex: 1 0 auto; }
+/* ha a kezdolapon talalatok vannak, a hero a tartalmahoz igazodik (a talalatok kozvetlenul alatta) */
+main:has(#mock-search-results .ms-results) > div.relative { flex: 0 0 auto; }
+main:has(#mock-search-results .ms-results) [class*="_hero_"] { flex: 0 0 auto; }
+
+/* a logo mogotti szurke hatter nelkul; a logo a tartalmi oszlop bal szelehez igazodik */
+[class*="bg-(--dds-cold-grey-1100)"] { background-color: transparent !important; margin-left: 0 !important; padding: 6px 12px 6px 0 !important; }
+/* a menu jobb szelen levo (utolso ket) pontok legordulo panelje jobbra igazodik (ne logjon ki a kepernyorol) */
+.ms-mainnav-list > li:nth-last-child(-n+2) > .ms-submenu { left: auto; right: 0; }
+
+/* asztali nezet: a navigacios sav a kepernyo kozepere igazodik (a fo tartalommal egy tengelyen), nem a logo es a nyelvvalaszto kozott */
+@media (min-width: 64rem) {
+  nav.header-upper.ms-onenav > .ms-onenav-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); flex: none; width: max-content; max-width: calc(100% - 2 * 240px); }
+}
+
+/* amig a suti-tajekoztato nyitva van, a lablec piros-feher-zold zaszlo-sava ne latsszon a sav felett (piros "keret") */
+body:has(.a11y-consent-banner, [data-ms-consent]) [class*="_footerFlag_"] { visibility: hidden; }
+
+
+/* suti-tajekoztato: a tartalom a lap oszlopaval azonos bal-jobb margoval (1200 px-es oszlop, kisebb kepernyon 16 px) */
+.a11y-consent-banner, [data-ms-consent] {
+  padding-left: max(16px, calc((100% - 1200px) / 2)) !important; padding-right: max(16px, calc((100% - 1200px) / 2)) !important;
+  justify-content: space-between !important;
+}
+.a11y-consent-banner > div:first-child, [data-ms-consent] > div:first-child { flex: 1 1 auto; max-width: none; }
+
+/* a lablecbol elerheto oldalak (Kapcsolat, Felhasznaloi kezikonyv, Felhasznalasi feltetelek, Adatkezelesi tajekoztato,
+   Akadalymentesitesi nyilatkozat): a zold sav csak a fejlec magassaga (90 px) - a hero 41 px-es kiegeszitese nelkul */
+[class*="_hero_"] > div > .xl\:h-\[41px\] { height: 0 !important; }
+
+/* a suti-sav fokuszjelzoje (az elso Tab a savra visz) */
+.a11y-consent-banner:focus { outline: none; }
+.a11y-consent-banner:focus-visible { outline: 3px solid #37f0bf; outline-offset: -6px; border-radius: 8px; }
+
+/* A DS a nyitott allapotot a host aria-expanded attributumaval stilusozza; az a felolvasonak kulon
+   "csoportkent" hangzott, ezert a host-rol levettuk - ugyanez a stilus adatattributumbol */
+dap-ds-button[data-lang-open="true"]::part(base) {
+  border-radius: var(--dds-button-subtle-menu-opened-border-radius);
+  border-color: var(--dds-button-subtle-menu-opened-border);
+  background-color: #38e0ac;
+  color: #0b3d3e;
+}
+
+/* lablec: az RSS hircsatorna ikon merete 24x24 px */
+footer a[href="/agazati-rss.xml"] img { width: 24px !important; height: 24px !important; }
+
+/* Betoltes elott (a script a fomenut a fejlec sorba helyezi): ne villanjon a regi, sotetebb navigacios
+   hatter, es a regi, kulon sor ne legyen lathato - a vegleges kinezet szerint atlatszo */
+header div[class*="backdrop-blur"] { display: none !important; }
+header div[class*="black-30"] { background-color: transparent !important; }
+header > div > div:has(> div[class*="black-30"]):not(.ms-onenav-bar) { visibility: hidden; position: absolute; pointer-events: none; }
+
+/* Lablecbol elerheto oldalak: az oldalcim a zold savban, az "Aktualis Magyar Kozlonyok" fejlecevel egyezo stilusban
+   (fejlec alatt 40 px, cim 32 px/700 feher, a tartalmi oszlop (1200 px) bal szelen) */
+.a11y-page-title { padding: 40px var(--dds-spacing-400, 16px); box-sizing: border-box; }
+.a11y-page-title-in { max-width: 1200px; margin-inline: auto; }
+.a11y-page-title-in h1 { margin: 0; }
+.a11y-page-h1-src { display: none !important; }
+/* ...a tartalmi oszlop: 1122 px (belul 1090 px, 16 px oldalmargo); felul ugyanannyi hely, mint alul (48 px) */
+.a11y-page-content { max-width: 1122px !important; padding-top: var(--a11y-page-pb, 48px) !important; }
+
+/* Visszafogottabb gombszin: a harsany mentazold (#37f0bf) helyett halvany menta hatter, sotet zold szoveg.
+   A DS gomb-tokenjeit irjuk felul (elsodleges/masodlagos gombok, a menusor aktiv/nyitott allapota). */
+:root {
+  --dds-button-primary-background-enabled: #38e0ac;
+  --dds-button-primary-background-hover: #33cc9d;
+  --dds-button-primary-background-pressed: #2ebf96;
+  --dds-button-secondary-background-enabled: #38e0ac;
+  --dds-button-secondary-background-hover: #33cc9d;
+  --dds-button-secondary-background-pressed: #2ebf96;
+  --dds-button-subtle-menu-active-background: #38e0ac;
+  --dds-button-subtle-menu-opened-background: #38e0ac;
+}
+
+/* Kozlemenyek oldalak (Magyar Kozlony, Agazati, Archiv): a kereso/szuro sav teljesen a zold savban van
+   (mint az njt.jog.gov.hu fejleceben): nincs kilogo (-24 px) szuro-sor, a zold sav alul 40 px-szel hosszabb */
+.search-hero { top: 0 !important; bottom: auto !important; }
+.search-hero > div:last-child { margin-bottom: 0 !important; }
+@media (min-width: 1024px) {
+  [class*="_hero_"] > div > div.lg\:h-\[159px\] { height: 223px; }
+}
+@media (max-width: 1023.98px) {
+  [class*="_hero_"] > div > div.h-\[514px\] { height: 568px; }
+}
+
+/* Mobil nezet: a menu (hamburger) es a bezaro ikon erintesi felulete 44x44 px, a lenyilo menu elemeinek magassaga 44 px */
+@media (max-width: 1023.98px) {
+  dap-ds-button[aria-label="Menü"]::part(base),
+  dap-ds-button[aria-label="Menü bezárása"]::part(base),
+  dap-ds-button[data-ms-drawer-close]::part(base) { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  .header-mobile-sidenav-item::part(base),
+  .header-mobile-sidenav-group-item::part(base) { min-height: 44px; box-sizing: border-box; }
+}
+
+/* Mobil menu: a lenyilo csoportok nyila zartan lefele, nyitva felfele mutat (a DS alapbol jobbra / lefele) */
+dap-ds-sidenav-group::part(toggle) { transform: rotate(90deg); }
+dap-ds-sidenav-group[open]::part(toggle) { transform: rotate(-90deg); }
+
+/* Nyelvvalaszto: az erintesi felulet legalabb 44 px magas (mobil/tablet) */
+@media (max-width: 1023.98px) {
+  dap-ds-navigation-menu-item:has(a[href^="/en/"], a[href^="/de/"]) > [slot="trigger"]::part(base) { min-height: 44px; box-sizing: border-box; }
+}
+
+/* Lapozo (Kozlemenyek oldalak es minden mas, ahol van): elozo | oldalszamok | kovetkezo */
+.ms-pager { display: flex; align-items: center; justify-content: center; gap: 24px; align-self: center; margin: 24px auto; flex-wrap: wrap; }
+.ms-pager-list { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ms-pager-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box;
+  border-radius: 8px; background: #38e0ac; color: #0b3d3e; text-decoration: none; cursor: pointer;
+}
+.ms-pager-btn:hover { background: #33cc9d; }
+.ms-pager-btn:active { background: #2ebf96; }
+.ms-pager-btn.is-disabled { background: #a3abb8; color: #fff; cursor: not-allowed; }
+.ms-pager-btn:focus-visible, .ms-pager-num:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-pager-num {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 6px; box-sizing: border-box;
+  font: 400 14px/1 Inter, sans-serif; color: #404753; text-decoration: none; border-radius: 6px;
+}
+.ms-pager-num:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.ms-pager-num.is-current { font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; color: #282c35; }
+.ms-pager-gap { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; font: 400 14px/1 Inter, sans-serif; color: #404753; }
+@media (max-width: 640px) { .ms-pager { gap: 12px; } .ms-pager-num { min-width: 32px; font-size: 14px; } .ms-pager-list { gap: 2px; } }
+.ms-pager-btn svg { width: 20px; height: 20px; }
+
+/* ===== Suti-/EIR-tajekoztato a dap.gov.hu stiluseban: kozepre igazitott, feher kartya (mobilon aljan "bottom sheet"),
+   cim, sotet-szurke szoveg, teljes szelessegu gomb. A tartalom es a viselkedes valtozatlan (nem modalis). ===== */
+.a11y-consent-banner, [data-ms-consent] {
+  position: fixed !important; left: 50% !important; top: 50% !important; right: auto !important; bottom: auto !important;
+  transform: translate(-50%, -50%);
+  width: min(640px, calc(100vw - 32px)) !important; max-width: none !important; max-height: calc(100vh - 32px) !important; overflow: hidden;
+  margin: 0 !important; padding: 24px !important; box-sizing: border-box;
+  display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; gap: 16px;
+  background: #fff !important; color: #404753 !important; border-radius: 8px !important; box-shadow: 0 12px 48px rgba(0, 0, 0, .28) !important;
+}
+.a11y-consent-banner::before, [data-ms-consent]::before { display: none !important; }
+.a11y-consent-title { flex: 0 0 auto; margin: 0; font: 700 18px/1.3 Inter, sans-serif; color: #282c35; }
+.a11y-consent-banner > div:first-of-type, [data-ms-consent] > div:first-of-type {
+  flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto; max-width: none !important; color: #404753 !important; font: 400 14px/1.55 Inter, sans-serif !important;
+}
+.a11y-consent-banner > div:first-of-type p, [data-ms-consent] > div:first-of-type p { margin: 12px 0 0 !important; padding: 0 !important; }
+.a11y-consent-banner > div:last-of-type, [data-ms-consent] > div:last-of-type {
+  flex: 0 0 auto; width: auto !important; margin: 0 !important; padding: 0 !important; position: static !important; background: transparent !important; align-self: flex-end;
+}
+.a11y-consent-banner button, [data-ms-consent] button { width: auto !important; }
+.a11y-consent-banner button:focus-visible, [data-ms-consent] button:focus-visible { outline: 2px solid #0b3d3e !important; outline-offset: 2px; }
+.a11y-consent-banner:focus-visible { outline: 3px solid #0b3d3e; outline-offset: 3px; border-radius: 8px; }
+@media (max-width: 639.98px) {
+  .a11y-consent-banner, [data-ms-consent] {
+    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important; transform: none;
+    width: 100% !important; max-height: 85vh !important; border-radius: 16px 16px 0 0 !important; padding: 20px 16px 24px !important;
+  }
+}
+
+/* A suti-ablak mogott sotet atfedes (mint a dap.gov.hu-n): csak vizualis, az oldal tovabbra is hasznalhato (a dialog nem modalis) */
+body:has(.a11y-consent-banner, [data-ms-consent])::after {
+  content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 89999; pointer-events: none;
+}
+
+/* Asztali fejlec: lebego, lekerekitett, sotet savban a navigacio (a megadott terv szerint) */
+@media (min-width: 1280px) {
+  header > div > nav.header-upper {
+    box-sizing: border-box; height: 64px; margin: 16px 0; padding-left: 24px !important; padding-right: 24px !important;
+    background: rgba(2, 33, 33, .72); border-radius: 8px;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+}
+
+/* Nyelvvalaszto es mobil menugomb: ugyanaz a meret, ravitel- es aktiv allapot, mint a tobbi menupontnak (.ms-nav-link):
+   ravitelre halvany feher hatter es feher szoveg; nyitott/lenyomott (aktiv) allapotban zold hatter sotet szoveggel */
+dap-ds-button[data-lang-open]::part(base) {
+  padding: 9px 10px; min-height: 37px; box-sizing: border-box; gap: 6px; border-radius: var(--dds-radius-base, 8px); border-color: transparent;
+  font: 500 16px/1.2 Inter, sans-serif; color: #fff; transition: none;
+}
+dap-ds-button[data-lang-open] dap-ds-typography, dap-ds-button[data-lang-open] dap-ds-icon, dap-ds-button[data-lang-open] dap-ds-stack {
+  color: inherit !important; font-size: 16px !important; font-weight: 500 !important; line-height: 1.2 !important;
+}
+dap-ds-button[data-lang-open="false"]:hover::part(base) { background-color: rgba(255, 255, 255, .12); border-color: transparent; color: #fff; }
+dap-ds-button[data-lang-open="true"]::part(base),
+dap-ds-button[data-lang-open="true"]:hover::part(base),
+dap-ds-button[data-lang-open]:active::part(base) { background-color: #38e0ac; border-color: transparent; color: #0b3d3e; }
+dap-ds-button[data-lang-open]:focus-visible::part(base) { outline: 2px solid #37f0bf; outline-offset: 2px; box-shadow: none; }
+dap-ds-button.header-primary-inverted-icon::part(base) { border-radius: var(--dds-radius-base, 8px); border-color: transparent; color: #fff; transition: none; }
+dap-ds-button.header-primary-inverted-icon:hover::part(base) { background-color: rgba(255, 255, 255, .12); border-color: transparent; color: #fff; }
+dap-ds-button.header-primary-inverted-icon:active::part(base) { background-color: #38e0ac; border-color: transparent; color: #0b3d3e; }
+dap-ds-button.header-primary-inverted-icon:focus-visible::part(base) { outline: 2px solid #37f0bf; outline-offset: 2px; box-shadow: none; }
+
+/* Nyelvvalaszto: a nyil nyitott allapotban megfordul, mint a tobbi menupont nyila (.ms-chevron) */
+dap-ds-button[data-lang-open] dap-ds-icon { display: inline-flex; transition: transform .12s ease; }
+dap-ds-button[data-lang-open="true"] dap-ds-icon { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { dap-ds-button[data-lang-open] dap-ds-icon { transition: none; } }
+
+/* a lablecbol elerheto oldalakon az ures szerkesztoi blokk ne adjon extra kozt a cim es a lista fole (mint a Magyar Kozlony oldalon) */
+.a11y-page-content > .ck-content:empty { display: none; }
+
+/* Kapcsolat oldal: 2/3 + 1/3 szegmens egymas mellett (mobilon egymas alatt) */
+.a11y-contact-split { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 36px; align-items: start; }
+.a11y-contact-split > .ck-content { min-width: 0; }
+.a11y-contact-aside { box-sizing: border-box; padding: 24px; border-radius: var(--dds-radius-base, 12px); background-color: var(--dds-white-70, rgba(255,255,255,.7)); overflow-wrap: anywhere; }
+.a11y-contact-aside > p { margin: 0 0 16px; }
+.a11y-contact-aside > p:last-child { margin-bottom: 0; }
+@media (max-width: 1023.98px) { .a11y-contact-split { grid-template-columns: minmax(0, 1fr); } }
+.a11y-contact-split .text-align-justify, .a11y-contact-split p { text-align: left; }
+.a11y-contact-src { display: none !important; }
+.a11y-contact-aside > h3 { margin: 0 0 8px; }
+
+/* Felhasznalasi feltetelek (mint dap.gov.hu/aszf): szoveg balra (nem sorkizart), jobbra tapado "Tartalom" kartya */
+.a11y-terms-split { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 48px; }
+.a11y-terms-split > .ck-content { flex: 1 1 0; min-width: 0; }
+.a11y-terms-aside { flex: 0 0 340px; width: 340px; position: sticky; top: 96px; }
+.a11y-terms-aside dap-ds-toc { display: block; background: #fff; border-radius: 8px; padding: 24px; box-sizing: border-box; }
+.a11y-terms-split .ck-content, .a11y-terms-split .ck-content p, .a11y-terms-split .ck-content .text-align-justify { text-align: left; }
+.a11y-terms-split .ck-content > .text-align-center { text-align: left; }
+.a11y-terms-split .ck-content > h3[id] { scroll-margin-top: 96px; }
+@media (max-width: 1023.98px) {
+  .a11y-terms-split { flex-direction: column; align-items: stretch; gap: 24px; }
+  .a11y-terms-aside { position: static; flex: none; width: 100%; }
+}
+.a11y-terms-split .ck-content > p.a11y-merged-title { font-size: 18px; line-height: 1.5; margin: 0 0 24px; }
