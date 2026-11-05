@@ -13,6 +13,7 @@ Hasznalat:
 """
 import http.server
 import os
+import posixpath
 import re
 import sys
 import threading
@@ -63,7 +64,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parts.path.startswith("/api/") or parts.path == "/__manifest" or parts.path.endswith(".data"):
             return self._send_fixture(parts)
         # a repo gyoker egyben az oldal gyokere: a nem-oldal mappakat ne szolgaljuk ki
-        if unquote(parts.path).lstrip("/").split("/")[0] in NOT_SITE:
+        # ugyanugy dekodolva/normalizalva, mint a fajl-feloldasnal (kulonben a /x/..%2fscripts/ atjut)
+        if posixpath.normpath(unquote(parts.path).replace("\\", "/")).lstrip("/").split("/")[0] in NOT_SITE:
             self.send_error(404)
             return None
         base = self.translate_path(parts.path)  # normalizal: '..' nem vezet ki a ROOT-bol
