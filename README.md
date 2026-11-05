@@ -44,7 +44,7 @@ JS-t újra kellene bundle-özni klasszikus scriptté – az az alkalmazás újra
 
 **7 főmenüpont:**
 1. Kezdőlap — `/` (`index.html`)
-2. Jogi MI kereső — `/jogi-informacio-kereso`
+2. Jogi MI kereső — a Kezdőlapon (a régi `/jogi-informacio-kereso` cím ide irányít)
 3. Aktuális Magyar Közlönyök — `/magyar-kozlony`
 4. Ágazati közlönyök — `/agazati-kozlony`
 5. Jogi hírek — `/jogszabalyi-aktualitasok`
@@ -149,7 +149,7 @@ együtt). Frissítés: `npm run snapshot -- /en/ /en/magyar-kozlony ...`, majd `
 - Az `a11y-fixes.js` feliratai (ugró link, menü- és régiónevek, „új ablakban
   nyílik meg”) az oldal nyelvét követik; a főmenüt a design system menüjéből
   olvassa ki, így a fordított oldalak rövidebb menüjét is helyesen adja vissza.
-- A mock MI kereső a fordított kereső oldalakon (`/en|de|fr|es|it|zh/jogi-informacio-kereso`,
+- A mock MI kereső a fordított kezdőlapokon (`/en|de|fr|es|it|zh/`,
   `.../szakmai-jogi-informacio-kereso`) is be van kötve: a feliratok az éles oldal
   szövegei az oldal nyelvén, a 4 példakérdés az oldal nyelvén szerepel, a válaszok
   szövege nem magyar nyelven angol. (Az éles kereső komponens offline – CORS miatt –
@@ -157,7 +157,7 @@ együtt). Frissítés: `npm run snapshot -- /en/ /en/magyar-kozlony ...`, majd `
 - A választott nyelvet az oldal a böngészőben tárolja (`localStorage`:
   `portal_selected_locale`, `i18nextLng`). Ha ez nem magyar (pl. a „böngésző nyelve”
   ablakban IGEN-t nyomtál), a magyar oldalak – az élővel azonosan – a
-  `/<nyelv>/jogi-informacio-kereso` oldalra irányítanak. Visszaállítás: „Back to
+  `/<nyelv>/` kezdőlapra irányítanak (a `?q=` kérdéssel együtt). Visszaállítás: „Back to
   Hungarian page”, vagy a konzolban `localStorage.clear()`. A React nélküli (mock
   kereső) oldalakon ezt a `mock-search.js` pótolja.
 - Az `/en/` (és az éles `/`) kezdőlap az **éles oldalon is** React #418

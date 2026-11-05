@@ -33,6 +33,10 @@ def _canonical_query(q):
     return urlencode(sorted(parse_qsl(q, keep_blank_values=True)))
 
 
+NOT_SITE = {"scripts", "node_modules", "__fixtures", "modules", "tests", "docs", ".git", ".claude",
+            "package.json", "package-lock.json", "start.bat", "README.md", ".gitignore"}
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     server_version = "jog-mirror/2.1"
 
@@ -58,8 +62,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 0. rogzitett API-/adatvalaszok (scripts/record_api.py)
         if parts.path.startswith("/api/") or parts.path == "/__manifest" or parts.path.endswith(".data"):
             return self._send_fixture(parts)
-        rel = unquote(parts.path).lstrip("/")
-        base = os.path.join(ROOT, rel.replace("/", os.sep)) if rel else ROOT
+        # a repo gyoker egyben az oldal gyokere: a nem-oldal mappakat ne szolgaljuk ki
+        if unquote(parts.path).lstrip("/").split("/")[0] in NOT_SITE:
+            self.send_error(404)
+            return None
+        base = self.translate_path(parts.path)  # normalizal: '..' nem vezet ki a ROOT-bol
         if os.path.isdir(base):
             if parts.query:
                 snap = os.path.join(base, "__q", _canonical_query(parts.query) + ".html")
@@ -113,6 +120,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(st.st_size))
         self.end_headers()
         return f
+
+    def list_directory(self, path):
+        self.send_error(404)
+        return None
 
     def end_headers(self):
         # ne cache-eljen a bongeszo, hogy valtoztatas utan mindig a friss allapotot lassuk

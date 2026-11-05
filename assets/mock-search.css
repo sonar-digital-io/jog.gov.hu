@@ -567,7 +567,7 @@ main:has(#mock-search-results .ms-answer-card, #mock-search-results .ms-pro) .ms
 .ms-tool svg path { fill: #282c35; }
 .ms-tool:hover { background: #dcdfe5; }
 .ms-tool:active { background: #cdd1d9; }
-.ms-tool:focus-visible { background: #dcdfe5; outline: 2px solid #7af0cf; outline-offset: 0; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #7af0cf; outline: none; }
+.ms-tool:focus-visible { background: #dcdfe5; outline: 2px solid #0b3d3e; outline-offset: 2px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #7af0cf; }
 .ms-tool.is-done { background: #cdd1d9; }
 /* eszkoztipp (mint a kereso gombjain), a sarok miatt jobbra igazitva */
 .ms-tool::before, .ms-tool::after { position: absolute; z-index: 1000000; opacity: 0; visibility: hidden; pointer-events: none; }

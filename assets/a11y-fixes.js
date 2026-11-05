@@ -777,7 +777,7 @@
   function consentBanner() {
     var banner = null;
     Array.prototype.some.call(D.querySelectorAll("body > div.fixed"), function (d) {
-      if (/sütik|EIR|cookie|Cookie|IRS|SIR|信息|информ/i.test(d.textContent) && d.querySelector("button") && !d.querySelector("nav, img")) { banner = d; return true; }
+      if ((/sütik|cookie|信息|информ/i.test(d.textContent) || /(EIR|IRS|SIR)/.test(d.textContent)) && d.querySelector("button") && !d.querySelector("nav, img")) { banner = d; return true; }
       return false;
     });
     var html = D.documentElement;
@@ -790,7 +790,8 @@
     // Nem modalis: a felhasznalo a sav elhagyhatja (Tab / kattintas), a lap tobbi resze elerheto marad.
     delAttr(banner, "aria-modal");
     // Billentyuzettel a fokusz nem hagyhatja el a suti-ablakot: a Tab/Shift+Tab az ablak (kontener) es a gombjai
-    // kozott korbe jar, amig az ablak nyitva van (a "Rendben" bezarja). Kivulrol erkezo Tab is az ablakra visz.
+    // kozott korbe jar, amig az ablak nyitva van (a "Rendben" bezarja). A lap tobbi resze kozott a Tab szabadon jar
+    // (nem modalis: kivulrol nem huzzuk vissza a fokuszt az ablakba - WCAG 2.1.2).
     if (!banner.__tabTrap) {
       banner.__tabTrap = true;
       D.addEventListener("keydown", function (e) {
@@ -800,10 +801,7 @@
         var items = [b].concat(Array.prototype.slice.call(b.querySelectorAll("button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])")).filter(isVisible));
         var ae = D.activeElement;
         var i = items.indexOf(ae);
-        if (i === -1 && !(ae && b.contains(ae))) {          // a fokusz az ablakon kivul van
-          e.preventDefault(); (e.shiftKey ? items[items.length - 1] : items[0]).focus({ preventScroll: true }); return;
-        }
-        if (i === -1) return;
+        if (i === -1) return;                                // a fokusz az ablakon kivul van: szabad Tab
         var n = e.shiftKey ? (i === 0 ? items.length - 1 : i - 1) : (i === items.length - 1 ? 0 : i + 1);
         e.preventDefault(); items[n].focus({ preventScroll: true });
       }, true);
@@ -939,8 +937,9 @@
       if (a) as.push(a);
     });
     // a (light DOM) menu/legordulo linkek; a fejlec logoja marad link
+    // (az almenu-nyito .ms-sub-trigger linket kihagyjuk: annak a Szokoz az almenut nyitja, nem navigal)
     D.querySelectorAll("nav.header-upper a[href]").forEach(function (a) {
-      if (!a.querySelector("img")) as.push(a);
+      if (!a.querySelector("img") && !a.classList.contains("ms-sub-trigger")) as.push(a);
     });
     as.forEach(function (a) {
       setAttr(a, "role", "button");

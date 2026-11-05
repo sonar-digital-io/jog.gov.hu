@@ -33,7 +33,9 @@ def canonical_query(q):
 
 def fixture_base(path, query):
     """A serve.py is ezt hasznalja a kereseshez."""
-    d = os.path.join(FIX, path.strip("/").replace("/", os.sep))
+    d = os.path.normpath(os.path.join(FIX, path.strip("/").replace("/", os.sep)))
+    if not (d + os.sep).startswith(FIX + os.sep):
+        d = os.path.join(FIX, "_kivul")  # '..' ne vezessen ki a __fixtures-bol (nem letezo -> 404)
     name = canonical_query(query) if query else "_"
     # nagyon hosszu query (pl. __manifest?paths=...) -> rovidebb, stabil nev
     if len(name) > 180:

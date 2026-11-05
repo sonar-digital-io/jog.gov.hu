@@ -27,7 +27,7 @@
     var sel = lsGet("portal_selected_locale");
     if (pageLang === "hu" && sel && LOCALES.indexOf(sel) !== -1) {
       // a Kezdolap a valasztott nyelven (nem a Jogi MI kereso); mas oldalon a kereso oldal marad
-      location.replace(location.pathname.replace(/\/+$/, "") === "" ? "/" + sel + "/" : "/" + sel + "/" + location.search);
+      location.replace("/" + sel + "/" + location.search + location.hash);  // a ?q= kerdes is atmegy
       return;
     }
     function langOf(path) { var m = /^\/([a-z]{2})(\/|$)/.exec(path); return m && LOCALES.indexOf(m[1]) !== -1 ? m[1] : "hu"; }
@@ -1346,11 +1346,12 @@
         fitHero();
         // kesz allapot: a felolvaso bemondja, hogy a valasz betoltodott, utana a fokusz a valasz cimere kerul
         var done = function () {
+          if (tok !== runTok) return;   // kozben uj kerdes: az elavult valasz ne jelentsen/fokuszaljon
           resMount.removeAttribute("data-streaming"); resMount.removeAttribute("aria-busy"); fitHero();
           announce(S.loaded);
           var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
           var title = wrap.querySelector("#ms-answer-title");
-          setTimeout(function () { if (title) title.focus({ preventScroll: true }); }, 1400);
+          setTimeout(function () { if (title && tok === runTok) title.focus({ preventScroll: true }); }, 1400);
           resMount.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
         };
         var reduceM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1372,11 +1373,12 @@
           var k = 0;
           resMount.setAttribute("data-streaming", "");
           var nextStep = function () {
+            if (tok !== runTok) return;
             if (k < steps.length) { showEl(steps[k++]); setTimeout(nextStep, 750); return; }
             row.remove();
             // jogszabalyok, azonosito/gombok, visszajelzes: egymas utan, kis kesleltetessel
             var j = 0;
-            (function tailStep() { if (j < rest.length) { showEl(rest[j++]); setTimeout(tailStep, 250); } else done(); })();
+            (function tailStep() { if (tok !== runTok) return; if (j < rest.length) { showEl(rest[j++]); setTimeout(tailStep, 250); } else done(); })();
           };
           setTimeout(nextStep, 500);
         } else { done(); }
