@@ -87,6 +87,18 @@ export function collect(root = document.body, { exclude = () => false } = {}) {
   const tabbables = [];
   const all = [];
   const buriedHeadings = []; // { heading, container }: gomb/kapcsolo stb. belsejeben levo cimsor
+  const hiddenFocusables = []; // aria-hidden="true" alatt, de lathato es Tab-bal elerheto: a felolvaso nem mond semmit
+  // a lathato, de aria-hidden reszfa Tab-megalloi: a Tab ide is eljut, a felolvaso viszont nem mond rola semmit
+  function visitAriaHidden(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (SKIP_TAGS.has(node.localName) || exclude(node) || node.hidden) return;
+      const cs = getComputedStyle(node);
+      if (cs.display === "none" || cs.visibility === "hidden") return;
+      if (isTabbable(node)) { tabbables.push(node); hiddenFocusables.push(node); }
+    }
+    for (const c of flatChildren(node)) visitAriaHidden(c);
+  }
 
   // leaf: a legkozelebbi "egysegkent felolvasott" os ({ el, role, presentational }) vagy null
   // list: a legkozelebbi lista elem (a listaelemeit a lapitott faban szamoljuk, mert slotokon at is lehetnek)
@@ -99,6 +111,9 @@ export function collect(root = document.body, { exclude = () => false } = {}) {
     }
     if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
     if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.getAttribute("aria-hidden") === "true" && !SKIP_TAGS.has(node.localName) && !exclude(node)) {
+        return visitAriaHidden(node);
+      }
       if (SKIP_TAGS.has(node.localName) || exclude(node) || isHidden(node)) return;
       all.push(node);
       if (isTabbable(node)) tabbables.push(node);
@@ -139,5 +154,5 @@ export function collect(root = document.body, { exclude = () => false } = {}) {
   const rest = tabbables.filter((el) => el.tabIndex === 0);
   const tabOrder = [...positive, ...rest].map((el) => describe(el, "focus"));
 
-  return { items, tabOrder, all, buriedHeadings };
+  return { items, tabOrder, all, buriedHeadings, hiddenFocusables };
 }

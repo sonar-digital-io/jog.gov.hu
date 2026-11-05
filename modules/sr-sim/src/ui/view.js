@@ -51,7 +51,7 @@ button { font: inherit; cursor: pointer; }
 `;
 
 const HTML = `
-<div class="hl" hidden><div class="box"></div><div class="label"><span class="key"></span><span class="txt"></span><ul class="iss"></ul></div></div>
+<div class="hl" hidden aria-hidden="true"><div class="box"></div><div class="label"><span class="key"></span><span class="txt"></span><ul class="iss"></ul></div></div>
 <aside class="panel" aria-label="Felolvasó-szimulátor: döntési fa">
   <div class="phead"><strong>Felolvasó-szimulátor</strong><button type="button" class="collapse" aria-expanded="true">Panel</button></div>
   <div class="body">

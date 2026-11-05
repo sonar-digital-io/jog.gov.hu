@@ -86,8 +86,11 @@ function setSound(on) {
   render();
 }
 
+let returnFocus = null;
+
 export function enable() {
   if (view) return;
+  returnFocus = document.activeElement;
   view = mount({
     onStrategy: (k) => { pause(); state.strategy = k; refresh(); state.index = -1; render(); },
     onPlay: () => (state.playing ? pause() : play()),
@@ -110,11 +113,18 @@ export function disable() {
   pause();
   view.destroy();
   view = null;
+  // a Kilepes gomb a feluleten volt: a fokusz menjen vissza oda, ahol bekapcsolaskor volt
+  if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+  returnFocus = null;
 }
 
 export function toggle() {
   (view ? disable : enable)();
 }
+
+const PAGE_WIDGET = "a[href],button,input,select,textarea,summary," +
+  ["button", "link", "menuitem", "tab", "slider", "combobox", "listbox", "option", "checkbox", "radio",
+   "switch", "textbox", "searchbox", "spinbutton", "treeitem", "gridcell"].map((r) => `[role=${r}]`).join(",");
 
 function onKey(e) {
   if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyA") {
@@ -132,7 +142,8 @@ function onKey(e) {
   const inUi = path.includes(view.host);
   const isRange = t?.type === "range";
   if (inUi && !((e.key === " " && isRange) || ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !isRange))) return;
-  if (!inUi && (t?.isContentEditable || /^(input|textarea|select)$/i.test(t?.localName || ""))) return;
+  // az oldal interaktiv elemein (menugomb, link, ful, csuszka, mezo) a Szokoz/nyilak az oldale maradnak
+  if (!inUi && (t?.isContentEditable || path.some((n) => n.matches?.(PAGE_WIDGET)))) return;
   if (e.key === " ") { e.preventDefault(); state.playing ? pause() : play(); }
   else if (e.key === "ArrowRight") { e.preventDefault(); pause(); show(state.index + 1); }
   else if (e.key === "ArrowLeft") { e.preventDefault(); pause(); show(state.index - 1); }

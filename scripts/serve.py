@@ -147,10 +147,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         clean = unquote(path.split("?", 1)[0].split("#", 1)[0])
         for prefix, base in ALIASES:
             if clean.startswith(prefix):
-                rel = os.path.normpath(clean[len(prefix):]).lstrip("\\/")
-                if rel == "." or rel.startswith(".."):
-                    break  # ne lehessen kilepni a mappabol
-                return os.path.join(base, rel)
+                # a feloldott ut a mappan belul kell maradjon ('..', 'c:/...', '\\' sem vezethet ki)
+                root = os.path.realpath(base)
+                full = os.path.realpath(os.path.join(root, clean[len(prefix):].lstrip("\\/")))
+                return full if full.startswith(root + os.sep) else os.path.join(root, "__nincs__")
         return super().translate_path(path)
 
     def send_head(self):

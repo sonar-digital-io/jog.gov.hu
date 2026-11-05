@@ -39,6 +39,31 @@ test("motor: H-sorrend és a főoldal ismert hibái", async ({ page }) => {
   }
 });
 
+test("motor: aria-hidden alatti fókuszálható elem = néma Tab-megálló", async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => {
+    const d = document.createElement("div");
+    d.setAttribute("aria-hidden", "true");
+    d.innerHTML = '<a href="#rejtett" id="rejtett-link">Rejtett link</a>';
+    document.querySelector("main").append(d);
+  });
+  const { ids } = await analyze(page);
+  expect(ids).toContain("hidden-focusable");
+});
+
+test("felület: az oldal gombján a Szóköz az oldalé marad", async ({ page }) => {
+  await open(page);
+  await page.keyboard.press("Alt+a");
+  const explain = page.locator("#sr-sim-root").locator(".explain");
+  const before = await explain.textContent();
+  const id = await page.locator('nav button[aria-expanded="false"][aria-controls]').first().getAttribute("aria-controls");
+  const btn = page.locator(`nav button[aria-controls="${id}"]`);
+  await btn.focus();
+  await page.keyboard.press(" ");
+  await expect(btn).toHaveAttribute("aria-expanded", "true"); // a menu nyilt ki, nem a lejatszas indult
+  await expect(explain).toHaveText(before);
+});
+
 test("felület: Alt+A, lejátszás, stratégiaváltás, Esc", async ({ page }) => {
   await open(page);
   const root = page.locator("#sr-sim-root");

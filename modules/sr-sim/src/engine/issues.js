@@ -26,6 +26,11 @@ export function findIssues(model, doc = document) {
     prev = h.level;
   }
 
+  // hidden-focusable: aria-hidden="true" alatt levo, Tab-bal elerheto elem -> nema Tab-megallo
+  for (const el of model.hiddenFocusables || []) {
+    add(el, "hidden-focusable", "error", "Fókuszálható elem aria-hidden=\"true\" alatt – a Tab eljut ide, a felolvasó nem mond semmit");
+  }
+
   // heading-hidden: cimsor egy egysegkent felolvasott elem (pl. gomb) belsejeben
   for (const { heading, container, containerRole } of model.buriedHeadings || []) {
     const r = roleLabel(containerRole) || "vezérlő";

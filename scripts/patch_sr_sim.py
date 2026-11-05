@@ -37,7 +37,7 @@ def patch(path):
 
 
 def main():
-    files = glob.glob(os.path.join(ROOT, "**", "index.html"), recursive=True)
+    files = glob.glob(os.path.join(ROOT, "**", "*.html"), recursive=True)  # a __q pillanatkepek is
     files = [p for p in files if "node_modules" not in p]  # repo gyoker = oldal gyoker
     patched = sum(patch(f) for f in files)
     print("felolvaso-szimulator: %d/%d HTML" % (patched, len(files)))
