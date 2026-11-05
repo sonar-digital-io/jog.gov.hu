@@ -13,10 +13,10 @@ async function open(page) {
 const analyze = (page) => page.evaluate(async () => {
   const { analyze } = await import("/__sr-sim/index.js");
   const a = analyze();
-  const ids = [];
-  a.issues.forEach((list) => list.forEach((i) => ids.push(i.id)));
+  const ids = [], sev = {};
+  a.issues.forEach((list) => list.forEach((i) => { ids.push(i.id); sev[i.id] = i.severity; }));
   const texts = Object.fromEntries(Object.entries(a.plans).map(([k, steps]) => [k, steps.map((s) => s.text)]));
-  return { texts, ids };
+  return { texts, ids, sev };
 });
 
 test("időzítés: karakteralapú becslés + lépésenkénti ráhagyás", () => {
@@ -26,17 +26,45 @@ test("időzítés: karakteralapú becslés + lépésenkénti ráhagyás", () => 
 
 test("motor: H-sorrend és a főoldal ismert hibái", async ({ page }) => {
   await open(page);
-  const { texts, ids } = await analyze(page);
+  const { texts, ids, sev } = await analyze(page);
   expect(texts.H[0]).toBe("Jogi MI kereső, címsor, 1. szint");
   expect(texts.D).toContain("Főmenü, navigációs régió");
   expect(texts.Tab[0]).toBe("Ugrás a fő tartalomra, hivatkozás");
   expect(texts.Tab).toContain("Keresés, szerkesztőmező");
-  // az akadalymentesitesi javitasok utan is megmarado, ismert hibak (ha kijavitjak, innen torolni)
-  for (const id of ["focus-no-name", "skip-link"]) expect(ids, id).toContain(id);
-  // a javitasokkal megszunt hibak ne jojjenek vissza
-  for (const id of ["heading-skip", "heading-hidden", "landmark-name", "dup-link", "idref"]) {
+  // a skip link celjat szkript teszi fokuszalhatova (lasd lent): statikusan csak figyelmeztetes
+  expect(sev["skip-link"]).toBe("warn");
+  // a javitasokkal megszunt hibak ne jojjenek vissza; a display:contents menupont-host nem ures Tab-megallo
+  for (const id of ["heading-skip", "heading-hidden", "landmark-name", "dup-link", "idref", "focus-no-name"]) {
     expect(ids, id).not.toContain(id);
   }
+});
+
+test("oldal: a szimulátor Tab-sorrendje = a böngésző valódi Tab-sorrendje", async ({ page }) => {
+  await open(page);
+  const { texts } = await analyze(page);
+  const simIdx = texts.Tab.indexOf("Keresés, szerkesztőmező");
+  expect(simIdx).toBeGreaterThan(0);
+  let realIdx = -1;
+  for (let i = 0; i < 20 && realIdx < 0; i++) {
+    await page.keyboard.press("Tab");
+    const tag = await page.evaluate(() => {
+      let a = document.activeElement;
+      while (a?.shadowRoot?.activeElement) a = a.shadowRoot.activeElement; // a DS-komponensek arnyek-DOM-jaba
+      return a?.localName;
+    });
+    if (tag === "textarea") realIdx = i;
+  }
+  expect(realIdx).toBe(simIdx); // ugyanannyi Tab-megallo van a keresomezo elott
+});
+
+test("oldal: a skip link a fő tartalomra viszi a fókuszt", async ({ page }) => {
+  await open(page);
+  await page.keyboard.press("Tab");
+  await expect(page.locator("a.skip-to-content")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main")).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.querySelector("main").contains(document.activeElement))).toBe(true);
 });
 
 test("motor: aria-hidden alatti fókuszálható elem = néma Tab-megálló", async ({ page }) => {
@@ -49,6 +77,20 @@ test("motor: aria-hidden alatti fókuszálható elem = néma Tab-megálló", asy
   });
   const { ids } = await analyze(page);
   expect(ids).toContain("hidden-focusable");
+});
+
+test("motor: inert részfa (árnyék-DOM-mal együtt) kiesik a Tab-sorrendből", async ({ page }) => {
+  await open(page);
+  const before = (await analyze(page)).texts.Tab.length;
+  await page.evaluate(() => document.querySelector("header").setAttribute("inert", ""));
+  const after = (await analyze(page)).texts.Tab.length;
+  expect(after).toBeLessThan(before);
+  expect(await page.evaluate(async () => {
+    const { analyze } = await import("/__sr-sim/index.js");
+    const header = document.querySelector("header");
+    // a fejlecen belul (light vagy arnyek-DOM) semmi ne maradjon Tab-megallo
+    return analyze().model?.tabOrder?.filter((i) => header.contains(i.el) || header.contains(i.el.getRootNode().host)).length ?? 0;
+  })).toBe(0);
 });
 
 test("felület: az oldal gombján a Szóköz az oldalé marad", async ({ page }) => {
