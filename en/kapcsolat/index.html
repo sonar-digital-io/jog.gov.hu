@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="en"><head><script>/*offline-nav-fix*/(function(){document.addEventListener('click',function(e){if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;var p=e.composedPath?e.composedPath():[];var el=null;for(var i=0;i<p.length;i++){var n=p[i];if(n&&n.getAttribute){var h=n.getAttribute('href');if(h&&h.charAt(0)==='/'){el=n;break;}}}if(!el)return;var inTrigger=false;for(var j=0;j<p.length;j++){var m=p[j];if(!m||!m.tagName)continue;if(m.getAttribute&&m.getAttribute('slot')==='trigger')inTrigger=true;if(m.tagName.toLowerCase()==='dap-ds-navigation-menu-item'){if(inTrigger&&(m.hasContent||m.querySelectorAll('dap-ds-navigation-menu-item').length))return;break;}}var href=el.getAttribute('href');if(href.indexOf('/assets/')===0)return;e.preventDefault();e.stopImmediatePropagation();window.location.assign(href);},true);var of=window.fetch;if(of){window.fetch=function(input,init){var u=typeof input==='string'?input:(input&&input.url)||'';var pr=of.apply(this,arguments);if(!/\.data(\?|$)/.test(u.split('#')[0]))return pr;return pr.then(function(r){if(r.status!==404)return r;var x=new URL(u,location.href);x.pathname=x.pathname.replace(/\.data$/,'');if(x.pathname==='/_root')x.pathname='/';x.searchParams.delete('_routes');window.location.assign(x.pathname+x.search);return new Promise(function(){});});};}})();</script><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/navbar-logo-X_OEODgP.svg"/><link rel="preload" as="image" href="/assets/footer-icon-B70n2n2u.svg"/><link rel="preload" as="image" href="/assets/szechenyi-terv-plus-BdtatNKY.jpg"/><title>Kapcsolat - Magyar Jogi Információs Portál</title><meta name="description" content="Kapcsolat"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="alternate" type="application/rss+xml" title="Magyar Jogi Információs Portál - Ágazati közlönyök" href="/agazati-rss.xml"/><link rel="modulepreload" href="/assets/entry.client-DZNx6mLN.js"/><link rel="modulepreload" href="/assets/chunk-JZWAC4HX-CrGT90sy.js"/><link rel="modulepreload" href="/assets/root-YtmxEp7W.js"/><link rel="modulepreload" href="/assets/QueryClientProvider-BrwRgA7n.js"/><link rel="modulepreload" href="/assets/IntlayerProvider-BZ3dv1KB.js"/><link rel="modulepreload" href="/assets/double-navbar-CgiVT7vN.js"/><link rel="modulepreload" href="/assets/Hero-DNEnZt7q.js"/><link rel="modulepreload" href="/assets/useDoubleNavbarLoaderData-DL2miFuC.js"/><link rel="modulepreload" href="/assets/LocalizedLink-BdmzuWcb.js"/><link rel="modulepreload" href="/assets/useAuth-B3u0VTjv.js"/><link rel="modulepreload" href="/assets/helpers-D1aQilED.js"/><link rel="modulepreload" href="/assets/selected-locale-Du44_lAr.js"/><link rel="modulepreload" href="/assets/useWebcomponents-BdhE4Rm7.js"/><link rel="modulepreload" href="/assets/useQuery-ugr1ubLm.js"/><link rel="modulepreload" href="/assets/jsonapi-views-Bp1k3Ueh.js"/><link rel="modulepreload" href="/assets/TelemetryContext-DygBxvbt.js"/><link rel="modulepreload" href="/assets/not-found-BM2cWloS.js"/><link rel="modulepreload" href="/assets/kapcsolat-qUjd1wIt.js"/><link rel="modulepreload" href="/assets/StaticPage-CTn-LeFB.js"/><link rel="modulepreload" href="/assets/CKContent-BRSqa9sH.js"/><link rel="modulepreload" href="/assets/Attachments-CeFIlqXP.js"/><link rel="stylesheet" href="/assets/root-rkR-D1JO.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"/><link rel="stylesheet" href="/assets/double-navbar-B-63_H10.css"/><link rel="stylesheet" href="/assets/Hero-k8XtJlB7.css"/><!--a11y-fixes-assets--><link rel="stylesheet" href="/assets/a11y-fixes.css"/><script src="/assets/a11y-fixes.js" defer=""></script></head><body class="main-content-base-bg"><a href="#dds-main-content" class="skip-to-content">Ugrás a fő tartalomra</a><div class="hydration-overlay"><div id="spinner-container" class="space-y-10"><div class="flex justify-center"><div class="w-20 h-20 border-8 border-(--dds-icon-brand-subtle) border-t-transparent rounded-full animate-spin"></div></div></div></div><header class="relative z-20 xl:flex xl:flex-col xl:items-center"><div class="xl:w-[1312px] xl:mx-(--dds-spacing-1600)"><nav class="header-upper "><div class="flex items-center self-stretch min-w-0"><div class="z-50 bg-(--dds-cold-grey-1100) rounded-(--dds-radius-base)  p-[6px] pr-[12px] ml-[-16px]"><div class="flex flex-row items-center"><a href="/en" data-discover="true"><img src="/assets/navbar-logo-X_OEODgP.svg" alt="Magyar Jogi Információs Portál" class="header-logo-beta"/></a><div class="flex h-[40px] items-center"><dap-ds-divider vertical="" variant="" spacing="200" style="--dds-divider-border-color:rgba(209, 215, 223, 0.4);--dds-divider-border-width:1px"></dap-ds-divider></div><dap-ds-typography size="sm" variant="description" class="text-(--dds-cold-grey-400) text-[11px] font-bold">Beta</dap-ds-typography></div></div></div><div class="hidden xl:flex justify-center items-center self-stretch"><ul class="flex flex-row flex-nowrap gap-x-(--dds-spacing-500) justify-center shrink-0 mb-[-4px]" role="list"><dap-ds-sidenav-item size="xs" class="header-navbar-first-menu-item" href="https://njt.hu/"><dap-ds-stack direction="row" spacing="100">National Legislation Database<dap-ds-icon name="external-link-line"></dap-ds-icon></dap-ds-stack></dap-ds-sidenav-item><dap-ds-sidenav-item size="xs" class="header-navbar-first-menu-item" href="https://magyarkozlony.hu"><dap-ds-stack direction="row" spacing="100">Hungarian Gazette Portal<dap-ds-icon name="external-link-line"></dap-ds-icon></dap-ds-stack></dap-ds-sidenav-item><dap-ds-sidenav-item size="xs" class="header-navbar-first-menu-item" href="https://cegportal.im.gov.hu/frontend/cegkozlony"><dap-ds-stack direction="row" spacing="100">Company Information Portal<dap-ds-icon name="external-link-line"></dap-ds-icon></dap-ds-stack></dap-ds-sidenav-item></ul></div><div class="flex flex-row justify-end items-center self-stretch gap-x-(--dds-spacing-200) "><div class="flex items-center gap-x-(--dds-spacing-200)"><dap-ds-navigation-menu class="main-navigation" activeHref="/en/kapcsolat"><dap-ds-navigation-menu-item baseHref="/en/kapcsolat" class="main-navigation-item"><dap-ds-button slot="trigger" size="sm" variant="subtle-menu" class="main-menu-button"><dap-ds-stack direction="row" spacing="100"><dap-ds-typography size="md" variant="body" class="header-secondary-menu-label">EN</dap-ds-typography><dap-ds-icon name="arrow-down-s-line"></dap-ds-icon></dap-ds-stack></dap-ds-button><dap-ds-stack spacing="100" class="flex w-max min-w-[webkit-max-content]"><a style="text-decoration:none" href="/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">Magyar</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/en/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item" aria-current="true"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">English</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/de/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">Deutsch</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/fr/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">Français</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/es/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">Español</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/it/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">Italiano</dap-ds-stack></dap-ds-stack></dap-ds-button></a><a style="text-decoration:none" href="/zh/kapcsolat" data-discover="true"><dap-ds-button variant="subtle-menu-item" class="main-menu-button-item"><dap-ds-stack spacing="0"><dap-ds-stack direction="row">中文</dap-ds-stack></dap-ds-stack></dap-ds-button></a></dap-ds-stack></dap-ds-navigation-menu-item></dap-ds-navigation-menu></div><dap-ds-button aria-label="Menü" shape="circle" variant="primary-inverted" class="block xl:hidden header-primary-inverted-icon dds-button-square"><dap-ds-icon name="menu-line"></dap-ds-icon></dap-ds-button></div></nav><div class="relative rounded-(--dds-radius-base) bg-transparent"><div class="absolute inset-0 backdrop-blur-[14px] pointer-events-none rounded-(--dds-radius-base) z-0"></div><div class="hidden xl:flex relative flex-row justify-center items-center h-[68px] bg-(--dds-black-30) rounded-(--dds-radius-base) z-1"><nav><dap-ds-navigation-menu class="main-navigation" activeHref="/en/kapcsolat"><dap-ds-navigation-menu-item class="main-navigation-item" baseHref="/"><dap-ds-button slot="trigger" size="sm" variant="subtle-menu" class="main-menu-button" href="/"><dap-ds-stack direction="row" spacing="100"><dap-ds-icon name="arrow-left-line" size="sm"></dap-ds-icon><dap-ds-typography size="md" variant="body" class="header-secondary-menu-label">Back to Hungarian page</dap-ds-typography></dap-ds-stack></dap-ds-button></dap-ds-navigation-menu-item><dap-ds-navigation-menu-item class="main-navigation-item" baseHref="/en/jogi-informacio-kereso"><dap-ds-button slot="trigger" size="sm" variant="subtle-menu" class="main-menu-button" href="/en/jogi-informacio-kereso"><dap-ds-typography size="md" variant="body" class="header-secondary-menu-label">Legal AI Search</dap-ds-typography></dap-ds-button></dap-ds-navigation-menu-item></dap-ds-navigation-menu></nav></div></div></div></header><main class="main-content-full-screen main-content-base-bg flex flex-col" id="dds-main-content" tabindex="-1"><div class="relative"><div class="_hero_zwz1c_2 mt-[-60px] lg:mt-[-159px] bg-(--dds-background-brand-base-inverted) flex flex-col w-full "><div class="_heroBackground_zwz1c_2"><div class="_heroInner_zwz1c_2"></div></div><div class="pt-[60px] lg:pt-[159px] z-15 relative"><div class="xl:h-[41px]"></div></div></div></div><div class="flex flex-col justify-center"><div class="flex flex-col gap-y-(--dds-spacing-600) xl:gap-y-(--dds-spacing-800) py-(--dds-spacing-800) xl:py-(--dds-spacing-1200) px-(--dds-spacing-400) xl:max-w-[906px] w-full self-center"><h1 class="dds-typography dds-heading dds-typography-h1">Imprint</h1><div class="
+            ck-content
+            dds-typography
+            dds-typography-size--md
+            undefined
+            "><p class="text-align-justify"><span><span lang="EN-GB">The National Legislation Database, as well as a legal information search tool supported by artificial intelligence and based on the content of that Database, European Union legal acts, and in-depth analysis of court decisions (hereinafter “AI Search Tool”) are operated as digital public services by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (MKIFK Zrt) to ensure broad accessibility to and comprehension of legislation and support access to justice. The National Legislation Database, as a digital public service, is an electronic collection of legislation containing consolidated texts of laws.</span></span></p>
+<p class="text-align-justify"><span lang="EN-GB">The National Legislation Database and the AI Search Tool are provided by MKIFK Zrt. to the public free of charge, via the internet.</span></p>
+<p class="text-align-justify"><span><span lang="EN-GB">The operation of the National Legislation Database is governed by Act CXXX of 2010 on law-making, with detailed regulations provided in Government Decree 338/2011 (29 December) on the National Legislation Database. The rules governing the operation of the AI Search Tool are set out in Government Decree 338/2011 (29 December) on the National Legislation Database.</span></span></p>
+<p><span><span lang="EN-GB">Publisher: Ministry of Justice</span></span><br><br><span><span lang="EN-GB">The National Legislation Database is operated by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (company registration number: 01-10-042469, tax number: 10941908-2-42).</span></span></p>
+<p><span><span lang="EN-GB">Contact:</span></span><br><span><span lang="EN-GB">Address: 1085 Budapest, Somogyi Béla Street 6.</span></span><br><span><span lang="EN-GB">Email: ugyfelszolgalat@mkifk.hu</span></span></p>
+</div></div></div></main><footer class="footer-ellipse [--trans:-30%] lg:[--trans:-41%]"><div class="_footerFlag_aoznm_2"></div><div class="_footerContent_aoznm_2"><div class="_footerContentInner_aoznm_2"><div class="_footerVersionTooltip_aoznm_2"><div class="_footerLogoContainer_aoznm_2"><img src="/assets/footer-icon-B70n2n2u.svg" alt="MKNJK Footer Logo" class="_footerLogo_aoznm_2"/></div><span class="_footerVersionTooltipPopup_aoznm_2"><div class="dds-typography typography-body dds-typography-size--xs _footerVersionTooltipText_aoznm_2">f<!-- -->0.160.0<!-- -->+b<!-- -->0.2.253</div></span></div><div class="_footerLinkContainer_aoznm_2"><nav class="_footerLinkContainerInner_aoznm_2"><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/agazati-rss.xml" target="_blank" data-discover="true"><img src="data:image/png;base64,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" alt="RSS" class="h-[21px] w-[21px]"/></a><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/en/kapcsolat" data-discover="true">Contact</a><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/en/felhasznaloi-kezikonyv" data-discover="true">User’s manual</a><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/en/felhasznalasi-feltetelek" data-discover="true">Terms of Use</a><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/en/akadalymentesitesi-nyilatkozat" data-discover="true">Accessibility Statement</a><a class="dds-link dds-link--inverted dds-link--sm dds-link--bold _footerLink_aoznm_2" href="/en/adatkezelesi-tajekoztato" data-discover="true">Privacy Notice</a></nav><div class="dds-typography typography-body dds-typography-size--sm _footerCopyright_aoznm_2 pb-[58px] "></div></div></div></div></footer><div class="fixed bottom-0 right-0 szechenyi-terv-plus-logo-xl:left-0 szechenyi-terv-plus-logo-xl:right-auto szechenyi-terv-plus-logo-xl:bottom-auto szechenyi-terv-plus-logo-xl:top-0 z-20"><img src="/assets/szechenyi-terv-plus-BdtatNKY.jpg" alt="Szechenyi Terv Plus Logo" class="max-h-18"/></div><script>((storageKey2, restoreKey) => {
+    if (!window.history.state || !window.history.state.key) {
+      let key = Math.random().toString(32).slice(2);
+      window.history.replaceState({ key }, "");
+    }
+    try {
+      let positions = JSON.parse(sessionStorage.getItem(storageKey2) || "{}");
+      let storedY = positions[restoreKey || window.history.state.key];
+      if (typeof storedY === "number") {
+        window.scrollTo(0, storedY);
+      }
+    } catch (error) {
+      console.error(error);
+      sessionStorage.removeItem(storageKey2);
+    }
+  })("react-router-scroll-positions", null)</script><dap-ds-snackbar></dap-ds-snackbar><script>window.__reactRouterContext = {"basename":"/","future":{"unstable_optimizeDeps":false,"unstable_subResourceIntegrity":false,"unstable_trailingSlashAwareDataRequests":false,"v8_middleware":false,"v8_splitRouteModules":false,"v8_viteEnvironmentApi":false},"routeDiscovery":{"mode":"lazy","manifestPath":"/__manifest"},"ssr":true,"isSpaMode":false};window.__reactRouterContext.stream = new ReadableStream({start(controller){window.__reactRouterContext.streamController = controller;}}).pipeThrough(new TextEncoderStream());</script><script type="module" async="">;
+import * as route0 from "/assets/root-YtmxEp7W.js";
+import * as route1 from "/assets/double-navbar-CgiVT7vN.js";
+import * as route2 from "/assets/kapcsolat-qUjd1wIt.js";
+  window.__reactRouterManifest = {
+  "entry": {
+    "module": "/assets/entry.client-DZNx6mLN.js",
+    "imports": [
+      "/assets/chunk-JZWAC4HX-CrGT90sy.js"
+    ],
+    "css": []
+  },
+  "routes": {
+    "root": {
+      "id": "root",
+      "path": "",
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": true,
+      "module": "/assets/root-YtmxEp7W.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/QueryClientProvider-BrwRgA7n.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js"
+      ],
+      "css": [
+        "/assets/root-rkR-D1JO.css"
+      ]
+    },
+    "locale": {
+      "id": "locale",
+      "parentId": "root",
+      "path": ":locale",
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": false,
+      "module": "/assets/double-navbar-CgiVT7vN.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/Hero-DNEnZt7q.js",
+        "/assets/useDoubleNavbarLoaderData-DL2miFuC.js",
+        "/assets/LocalizedLink-BdmzuWcb.js",
+        "/assets/useAuth-B3u0VTjv.js",
+        "/assets/helpers-D1aQilED.js",
+        "/assets/selected-locale-Du44_lAr.js",
+        "/assets/useWebcomponents-BdhE4Rm7.js",
+        "/assets/useQuery-ugr1ubLm.js",
+        "/assets/jsonapi-views-Bp1k3Ueh.js",
+        "/assets/TelemetryContext-DygBxvbt.js",
+        "/assets/not-found-BM2cWloS.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js",
+        "/assets/QueryClientProvider-BrwRgA7n.js"
+      ],
+      "css": [
+        "/assets/double-navbar-B-63_H10.css",
+        "/assets/Hero-k8XtJlB7.css"
+      ]
+    },
+    "locale-routes/kapcsolat": {
+      "id": "locale-routes/kapcsolat",
+      "parentId": "locale",
+      "path": "kapcsolat",
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": false,
+      "module": "/assets/kapcsolat-qUjd1wIt.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/StaticPage-CTn-LeFB.js",
+        "/assets/CKContent-BRSqa9sH.js",
+        "/assets/Attachments-CeFIlqXP.js",
+        "/assets/Hero-DNEnZt7q.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js",
+        "/assets/helpers-D1aQilED.js"
+      ],
+      "css": [
+        "/assets/Hero-k8XtJlB7.css"
+      ]
+    },
+    "components/layouts/double-navbar": {
+      "id": "components/layouts/double-navbar",
+      "parentId": "root",
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": false,
+      "module": "/assets/double-navbar-CgiVT7vN.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/Hero-DNEnZt7q.js",
+        "/assets/useDoubleNavbarLoaderData-DL2miFuC.js",
+        "/assets/LocalizedLink-BdmzuWcb.js",
+        "/assets/useAuth-B3u0VTjv.js",
+        "/assets/helpers-D1aQilED.js",
+        "/assets/selected-locale-Du44_lAr.js",
+        "/assets/useWebcomponents-BdhE4Rm7.js",
+        "/assets/useQuery-ugr1ubLm.js",
+        "/assets/jsonapi-views-Bp1k3Ueh.js",
+        "/assets/TelemetryContext-DygBxvbt.js",
+        "/assets/not-found-BM2cWloS.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js",
+        "/assets/QueryClientProvider-BrwRgA7n.js"
+      ],
+      "css": [
+        "/assets/double-navbar-B-63_H10.css",
+        "/assets/Hero-k8XtJlB7.css"
+      ]
+    },
+    "routes/home": {
+      "id": "routes/home",
+      "parentId": "components/layouts/double-navbar",
+      "index": true,
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": false,
+      "module": "/assets/home-e19SU39T.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/SubscriptionDualCard-DETZWbDC.js",
+        "/assets/Hero-DNEnZt7q.js",
+        "/assets/LocalizedLink-BdmzuWcb.js",
+        "/assets/useDoubleNavbarLoaderData-DL2miFuC.js",
+        "/assets/gazettes-Cm1t4mtm.js",
+        "/assets/useWebcomponents-BdhE4Rm7.js",
+        "/assets/useLocalizedNavigate-DPesD3Kx.js",
+        "/assets/helpers-D1aQilED.js",
+        "/assets/useQuery-ugr1ubLm.js",
+        "/assets/InformationalCardMain-Bnat_Fr4.js",
+        "/assets/PromotedInformationalBase-BUkc_MrI.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js",
+        "/assets/QueryClientProvider-BrwRgA7n.js"
+      ],
+      "css": [
+        "/assets/home--5sJi1iY.css",
+        "/assets/SubscriptionDualCard-C1MfdYg5.css",
+        "/assets/Hero-k8XtJlB7.css",
+        "/assets/PromotedInformationalBase-CLQBDFKi.css"
+      ]
+    },
+    "locale-routes/home": {
+      "id": "locale-routes/home",
+      "parentId": "locale",
+      "index": true,
+      "hasAction": false,
+      "hasLoader": true,
+      "hasClientAction": false,
+      "hasClientLoader": false,
+      "hasClientMiddleware": false,
+      "hasErrorBoundary": false,
+      "module": "/assets/home-e19SU39T.js",
+      "imports": [
+        "/assets/chunk-JZWAC4HX-CrGT90sy.js",
+        "/assets/SubscriptionDualCard-DETZWbDC.js",
+        "/assets/Hero-DNEnZt7q.js",
+        "/assets/LocalizedLink-BdmzuWcb.js",
+        "/assets/useDoubleNavbarLoaderData-DL2miFuC.js",
+        "/assets/gazettes-Cm1t4mtm.js",
+        "/assets/useWebcomponents-BdhE4Rm7.js",
+        "/assets/useLocalizedNavigate-DPesD3Kx.js",
+        "/assets/helpers-D1aQilED.js",
+        "/assets/useQuery-ugr1ubLm.js",
+        "/assets/InformationalCardMain-Bnat_Fr4.js",
+        "/assets/PromotedInformationalBase-BUkc_MrI.js",
+        "/assets/IntlayerProvider-BZ3dv1KB.js",
+        "/assets/QueryClientProvider-BrwRgA7n.js"
+      ],
+      "css": [
+        "/assets/home--5sJi1iY.css",
+        "/assets/SubscriptionDualCard-C1MfdYg5.css",
+        "/assets/Hero-k8XtJlB7.css",
+        "/assets/PromotedInformationalBase-CLQBDFKi.css"
+      ]
+    }
+  },
+  "url": "/assets/manifest-e9bf182e.js",
+  "version": "e9bf182e"
+};
+  window.__reactRouterRouteModules = {"root":route0,"locale":route1,"locale-routes/kapcsolat":route2};
+
+import("/assets/entry.client-DZNx6mLN.js");</script><!--$?--><template id="B:0"></template><!--/$--><script id="_R_">requestAnimationFrame(function(){$RT=performance.now()});</script><div hidden id="S:0"><script>window.__reactRouterContext.streamController.enqueue("[{\"_1\":2,\"_148\":-5,\"_149\":-5},\"loaderData\",{\"_3\":4,\"_5\":7,\"_34\":35},\"root\",{\"_5\":6},\"locale\",\"en\",{\"_8\":9,\"_10\":11,\"_12\":13,\"_14\":15,\"_16\":17,\"_18\":19,\"_20\":9,\"_21\":9,\"_22\":19,\"_23\":24},\"notFound\",false,\"copyright\",\"\",\"backendVersion\",\"0.2.253\",\"searchWebcomponentBaseUrl\",\"https://jog.gov.hu/ai\",\"njtUrl\",\"https://njt.hu/\",\"newsLetterEnabled\",true,\"subscriptionEnabled\",\"loginEnabled\",\"b2bSearchPublicEnabled\",\"telemetryConfig\",{\"_25\":26,\"_27\":28,\"_29\":30,\"_31\":32,\"_33\":19},\"otlpEndpoint\",\"https://analytics.jog.gov.hu/v1/traces\",\"serviceName\",\"portal-frontend\",\"serviceVersion\",\"0.160.0\",\"environment\",\"portal-frontend-5dd6447db8-nk75l\",\"measurementEnabled\",\"locale-routes/kapcsolat\",{\"_36\":37,\"_147\":-7},\"data\",{\"_38\":39,\"_40\":41,\"_42\":43,\"_48\":49,\"_99\":100},\"type\",\"node--page\",\"id\",\"e410f41d-5287-4a6e-99dc-438a313cbab0\",\"links\",{\"_44\":45},\"self\",{\"_46\":47},\"href\",\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0?resourceVersion=id%3A172826\",\"attributes\",{\"_50\":51,\"_52\":53,\"_54\":6,\"_55\":56,\"_57\":19,\"_58\":59,\"_60\":61,\"_62\":63,\"_64\":9,\"_65\":9,\"_66\":9,\"_67\":-5,\"_68\":-5,\"_69\":70,\"_75\":76,\"_77\":9,\"_78\":79,\"_88\":89,\"_97\":98},\"drupal_internal__nid\",91824,\"drupal_internal__vid\",172826,\"langcode\",\"revision_timestamp\",\"2026-03-04T13:52:11+00:00\",\"status\",\"title\",\"Imprint\",\"created\",\"2026-03-02T18:00:58+00:00\",\"changed\",\"2026-03-04T13:29:55+00:00\",\"promote\",\"sticky\",\"default_langcode\",\"revision_translation_affected\",\"moderation_state\",\"path\",{\"_71\":72,\"_73\":74,\"_54\":6},\"alias\",\"/imprint\",\"pid\",15141,\"content_translation_source\",\"hu\",\"content_translation_outdated\",\"api_endpoint_url\",[80,85],{\"_81\":82,\"_58\":41,\"_83\":84},\"uri\",\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0\",\"options\",[],{\"_81\":86,\"_58\":86,\"_83\":87},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page\",[],\"body\",{\"_90\":91,\"_92\":93,\"_94\":95,\"_96\":11},\"value\",\"\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database, as well as a legal information search tool supported by artificial intelligence and based on the content of that Database, European Union legal acts, and in-depth analysis of court decisions (hereinafter “AI Search Tool”) are operated as digital public services by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (MKIFK Zrt) to ensure broad accessibility to and comprehension of legislation and support access to justice. The National Legislation Database, as a digital public service, is an electronic collection of legislation containing consolidated texts of laws.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database and the AI Search Tool are provided by MKIFK Zrt. to the public free of charge, via the internet.\u003c/span\u003e\u003c/p\u003e\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe operation of the National Legislation Database is governed by Act CXXX of 2010 on law-making, with detailed regulations provided in Government Decree 338/2011 (29 December) on the National Legislation Database. The rules governing the operation of the AI Search Tool are set out in Government Decree 338/2011 (29 December) on the National Legislation Database.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003ePublisher: Ministry of Justice\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cbr\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database is operated by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (company registration number: 01-10-042469, tax number: 10941908-2-42).\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eContact:\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eAddress: 1085 Budapest, Somogyi Béla Street 6.\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cspan style=\\\"color:black;\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eEmail: ugyfelszolgalat@mkifk.hu\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\",\"format\",\"full_html\",\"processed\",\"\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database, as well as a legal information search tool supported by artificial intelligence and based on the content of that Database, European Union legal acts, and in-depth analysis of court decisions (hereinafter “AI Search Tool”) are operated as digital public services by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (MKIFK Zrt) to ensure broad accessibility to and comprehension of legislation and support access to justice. The National Legislation Database, as a digital public service, is an electronic collection of legislation containing consolidated texts of laws.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\\n\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database and the AI Search Tool are provided by MKIFK Zrt. to the public free of charge, via the internet.\u003c/span\u003e\u003c/p\u003e\\n\u003cp class=\\\"text-align-justify\\\"\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe operation of the National Legislation Database is governed by Act CXXX of 2010 on law-making, with detailed regulations provided in Government Decree 338/2011 (29 December) on the National Legislation Database. The rules governing the operation of the AI Search Tool are set out in Government Decree 338/2011 (29 December) on the National Legislation Database.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\\n\u003cp\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003ePublisher: Ministry of Justice\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cbr\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eThe National Legislation Database is operated by MKIFK Magyar Közlönykiadó és Igazságügyi Fordítóközpont Zártkörűen Működő Részvénytársaság (company registration number: 01-10-042469, tax number: 10941908-2-42).\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\\n\u003cp\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eContact:\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eAddress: 1085 Budapest, Somogyi Béla Street 6.\u003c/span\u003e\u003c/span\u003e\u003cbr\u003e\u003cspan\u003e\u003cspan lang=\\\"EN-GB\\\"\u003eEmail: ugyfelszolgalat@mkifk.hu\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\\n\",\"summary\",\"field_page_id\",\"kapcsolat\",\"relationships\",{\"_101\":102,\"_116\":117,\"_128\":129,\"_139\":140},\"node_type\",{\"_36\":103,\"_42\":110},{\"_38\":104,\"_40\":105,\"_106\":107},\"node_type--node_type\",\"bda7145b-8f6a-4a4e-92d7-fff1d311b888\",\"meta\",{\"_108\":109},\"drupal_internal__target_id\",\"page\",{\"_111\":112,\"_44\":114},\"related\",{\"_46\":113},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/node_type?resourceVersion=id%3A172826\",{\"_46\":115},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/relationships/node_type?resourceVersion=id%3A172826\",\"revision_uid\",{\"_36\":118,\"_42\":123},{\"_38\":119,\"_40\":120,\"_106\":121},\"user--user\",\"30c1ad0c-dc97-4811-93e1-1a6f731b4c74\",{\"_108\":122},5,{\"_111\":124,\"_44\":126},{\"_46\":125},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/revision_uid?resourceVersion=id%3A172826\",{\"_46\":127},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/relationships/revision_uid?resourceVersion=id%3A172826\",\"uid\",{\"_36\":130,\"_42\":134},{\"_38\":119,\"_40\":131,\"_106\":132},\"70f81f38-65f2-46e3-8cc2-7042b5ba6f8f\",{\"_108\":133},1,{\"_111\":135,\"_44\":137},{\"_46\":136},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/uid?resourceVersion=id%3A172826\",{\"_46\":138},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/relationships/uid?resourceVersion=id%3A172826\",\"field_files\",{\"_36\":141,\"_42\":142},[],{\"_111\":143,\"_44\":145},{\"_46\":144},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/field_files?resourceVersion=id%3A172826\",{\"_46\":146},\"http://portals-backend.k2-prod-portal.svc.cluster.local/en/jsonapi/node/page/e410f41d-5287-4a6e-99dc-438a313cbab0/relationships/field_files?resourceVersion=id%3A172826\",\"files\",\"actionData\",\"errors\"]\n");</script><!--$?--><template id="B:1"></template><!--/$--></div><script>$RB=[];$RV=function(a){$RT=performance.now();for(var b=0;b<a.length;b+=2){var c=a[b],e=a[b+1];null!==e.parentNode&&e.parentNode.removeChild(e);var f=c.parentNode;if(f){var g=c.previousSibling,h=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d||"/&"===d)if(0===h)break;else h--;else"$"!==d&&"$?"!==d&&"$~"!==d&&"$!"!==d&&"&"!==d||h++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;e.firstChild;)f.insertBefore(e.firstChild,c);g.data="$";g._reactRetry&&requestAnimationFrame(g._reactRetry)}}a.length=0};
+$RC=function(a,b){if(b=document.getElementById(b))(a=document.getElementById(a))?(a.previousSibling.data="$~",$RB.push(a,b),2===$RB.length&&("number"!==typeof $RT?requestAnimationFrame($RV.bind(null,$RB)):(a=performance.now(),setTimeout($RV.bind(null,$RB),2300>a&&2E3<a?2300-a:$RT+300-a)))):b.parentNode.removeChild(b)};$RC("B:0","S:0")</script><div hidden id="S:1"><script>window.__reactRouterContext.streamController.close();</script></div><script>$RC("B:1","S:1")</script></body></html>

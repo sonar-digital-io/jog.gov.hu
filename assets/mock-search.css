@@ -1,0 +1,1051 @@
+/* mock-search.css - a jog.gov.hu MI kereso mock ujraepitese (offline, mock service).
+   A szinek a design system brand (teal) rampjabol jonnek, hogy egyezzen az elessel. */
+:root {
+  --ms-brand-100: #edf4f2;
+  --ms-brand-200: #d2e8e3;
+  --ms-brand-300: #b7dcd3;
+  --ms-brand-600: #66b8a5;
+  --ms-brand-1000: #278774;
+  --ms-brand-1100: #227b6b;
+  --ms-brand-1600: #0b3d3e;
+  --ms-ink: #2b3a3f;
+  --ms-grey: #606b7a;
+  --ms-grey-soft: #5b6670;  /* volt #8a97a0 (2,99:1) -> 5,9:1 feher alapon */
+  --ms-line: #e2eae7;
+  /* a valasz-fejlec k2s markjai (a k2s bundle nincs a tukorben -> kozelito ertekek) */
+  --ms-hl: #a9ebdc;          /* brand-highlighted   – buborek háttér */
+  --ms-hl-strong: #37f0bf;   /* brand-highlighted-strong – ikon doboz háttér */
+  --ms-primary: #0b5c4c;     /* brand-primary       – fejléc szöveg */
+}
+
+/* ---------- searchbar (a hero aljara lognak) ---------- */
+.ms-searchbar-wrap { width: 100%; }
+.ms-searchbar {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid #e5ece9;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px -18px rgba(11, 61, 62, .35);
+  padding: 18px 16px 18px 22px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ms-searchbar.is-focus {
+  border-color: var(--ms-brand-1000);
+  box-shadow: 0 0 0 3px rgba(39, 135, 116, .12), 0 18px 40px -18px rgba(11, 61, 62, .35);
+}
+.ms-input {
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  resize: none;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ms-ink);
+  background: transparent;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ms-input::placeholder { color: #9aa7ac; }
+.ms-iconbtn {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border: 0; background: transparent; cursor: pointer; padding: 0;
+  border-radius: 8px; color: var(--ms-brand-1000);
+}
+.ms-iconbtn:hover { background: var(--ms-brand-100); }
+.ms-clear { color: #4a5560; font-size: 22px; line-height: 1; }
+.ms-search svg { width: 22px; height: 22px; }
+
+/* ---------- toggles ---------- */
+.ms-toggles {
+  display: flex; flex-wrap: wrap; gap: 28px;
+  margin-top: 18px; padding: 0 6px;
+}
+.ms-toggle {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 15px; color: var(--ms-ink); cursor: pointer; user-select: none;
+}
+.ms-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ms-track {
+  position: relative; flex: 0 0 auto;
+  width: 40px; height: 22px; border-radius: 999px;
+  background: #c9d3d1; transition: background .15s ease;
+}
+.ms-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25);
+  transition: transform .15s ease;
+}
+.ms-toggle input:checked + .ms-track { background: var(--ms-brand-1000); }
+.ms-toggle input:checked + .ms-track .ms-knob { transform: translateX(18px); }
+
+/* ---------- searchbar a VALÓDI design system komponensekből ---------- */
+.ms-searchbar-ds { position: relative; width: 760px; max-width: 100%; }
+/* lathato mezocimke (WCAG 3.3.2) */
+.ms-label { display: block; margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #fff; /* a hero sotet hatteren all (1.4.3) */ cursor: text; }
+.ms-on-dark .ms-label { color: #fff; }
+.ms-answer-label:focus { outline: none; }
+.ms-answer-label:focus-visible { outline: 2px solid #37f0bf; outline-offset: 2px; }
+.ms-sr-only {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+  clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important;
+}
+.ms-input-ds {
+  display: block; width: 100%;
+  --dds-textarea-min-rows: 1;
+}
+.ms-input-ds::part(base) { border-radius: var(--dds-radius-lg, 16px); gap: 0; margin-top: 0; height: auto; min-height: 114px; box-sizing: border-box; }
+.ms-input-ds::part(input) {
+  padding-top: 14px; padding-right: 18px; padding-bottom: 62px; line-height: 1.5;
+  border-color: #606b7a; /* mint elesen; 5,3:1 a feher hatteren (1.4.11) */
+  resize: none; scrollbar-width: none; height: auto; min-height: 114px; max-height: 340px; field-sizing: content; overflow-y: auto; box-sizing: border-box;
+}
+@media (max-width: 640px) {
+  .ms-input-ds::part(input) { font-size: 16px; }
+  /* ket sor (2 x 24px) + fent 14px + lent 62px (a gombsor helye) + 2px keret: a 2. sor mellett meg nem nyulik */
+  .ms-input-ds::part(base), .ms-input-ds::part(input) { min-height: 126px; }
+}
+.ms-actions {
+  position: absolute; right: 8px; bottom: 8px; /* a mezo jobb also sarkaban, a mezovel egyutt nyulik */
+  display: flex; align-items: center; gap: 8px; z-index: 10;
+}
+/* elesen: my-4 min-h-10 flex gap-4 items-center */
+/* kereses gomb: elesen 38x38-as, halvany brand hatteru kor */
+.ms-search-ds::part(base), .ms-mic-ds::part(base), .ms-settings-btn::part(base), .ms-add-btn::part(base) { width: 38px; height: 38px; padding: 0; justify-content: center; background-color: rgba(2, 118, 113, .05); }
+.ms-mic-ds::part(base), .ms-settings-btn::part(base), .ms-add-btn::part(base) { background-color: transparent; }
+.ms-mic-ds:not(.is-listening):hover::part(base), .ms-settings-btn:hover::part(base), .ms-add-btn:hover::part(base) { background-color: rgba(2, 118, 113, .08); }
+.ms-toggles-ds { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; min-height: 40px; margin: 16px 0; padding: 0; }
+/* switch szinek (a dds valtozok atoroklodnek a shadow DOM-ba) */
+.ms-toggles-ds dap-ds-switch {
+  --dds-switch-checked-bg: #37f0bf;   /* track – kijelölve */
+  --dds-switch-unchecked-bg: #606b7a; /* track – nincs kijelölve */
+  --dds-switch-thumb-color: #fff;     /* toggle (thumb) */
+}
+/* kezdőlap: sötét hero -> világos felirat (a dds-label örökli a color-t) */
+.ms-on-dark .ms-toggles-ds dap-ds-switch { color: #eaf3f0; }
+
+/* ---------- legördülő: népszerű / legutóbbi keresések ---------- */
+.ms-suggest {
+  position: absolute; top: 100%; left: 0; width: 100%; box-sizing: border-box;
+  margin-top: 8px; padding: 18px 20px;
+  background: #fff; border: 2px solid var(--ms-brand-200);
+  border-radius: 12px; z-index: 30;
+  box-shadow: 0 20px 44px -20px rgba(11, 61, 62, .38);
+  display: none; gap: 20px;
+}
+.ms-suggest.is-open { display: flex; }
+@media (max-width: 640px) { .ms-suggest { flex-direction: column; } }
+.ms-suggest-col { flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+/* natic <ul> reset: alapertelmezett margo/padding/pontok nelkul, a gombok
+   flex-oszlopba rendezve, teljes szelesseggel (kulonben align-items:flex-start
+   miatt csak a tartalmukhoz igazodnanak, es a gomb sajat width:100%-a a szuk
+   <li>-hez viszonyulna, nem az oszlophoz) */
+.ms-suggest-ul {
+  list-style: none; margin: 0; padding: 0; width: 100%;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ms-suggest-ul > li { width: 100%; }
+.ms-suggest-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 15px; color: var(--ms-ink); margin-bottom: 2px;
+}
+.ms-suggest-title svg { flex: 0 0 auto; }
+.ms-suggest-btn {
+  background: none; border: 0; padding: 0; margin: 0; width: 100%;
+  text-align: left; font: inherit; font-size: 13px; line-height: 1.4;
+  color: var(--ms-brand-1100); cursor: pointer;
+  outline-color: var(--dds-focus-outer-ring);
+  outline-offset: var(--dds-spacing-50);
+  outline-width: var(--dds-border-width-large);
+}
+.ms-suggest-btn:hover { text-decoration: underline; }
+.ms-suggest-btn:focus-visible {
+  outline-style: solid;
+  border-radius: var(--dds-radius-base);
+}
+
+/* ---------- results ---------- */
+.ms-results { width: 100%; margin-top: 0; }
+.ms-results-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .ms-results-grid { grid-template-columns: 1fr; }
+}
+
+.ms-answer-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px -22px rgba(11, 61, 62, .32);
+  padding: 34px 40px 30px;
+}
+.ms-answer-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  margin-bottom: 22px;
+}
+.ms-head-badge { display: flex; align-items: stretch; min-width: 0; }
+.ms-owl {
+  flex: 0 0 auto; align-self: flex-end;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px; margin-right: 4px; border-radius: 10px;
+  background: var(--ms-hl-strong); color: #fff;
+}
+.ms-owl svg { width: 26px; height: 33px; display: block; }
+.ms-answer-label {
+  margin: 0;
+  align-self: flex-end;
+  background: var(--ms-hl);
+  color: var(--ms-primary);
+  font-weight: 600; font-size: 16px; line-height: 1.3;
+  padding: 12px 14px;
+  border-radius: 10px; border-bottom-left-radius: 0;
+}
+.ms-answer-id {
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: italic; font-size: 12px; color: #5b6670; /* volt #b8c2c0 (1,82:1) */
+  white-space: nowrap; padding-top: 6px;
+}
+
+.ms-answer-body { color: var(--ms-ink); font-size: 18px; line-height: 1.5; }
+.ms-answer-body p { margin: 0 0 16px; }
+.ms-answer-body strong { font-weight: 700; }
+.ms-answer-body ul, .ms-answer-body ol { margin: 0 0 16px; padding-left: 26px; }
+.ms-answer-body ul { list-style: disc outside; }
+.ms-answer-body ol { list-style: decimal outside; }
+.ms-answer-body li { margin: 0 0 10px; display: list-item; }
+.ms-answer-body li::marker { color: var(--ms-ink); }
+.ms-answer-body .ms-lead { font-weight: 700; margin-bottom: 8px; }
+
+.ms-cite {
+  display: inline-flex; vertical-align: -2px; margin-left: 5px;
+  color: var(--ms-brand-1000); text-decoration: none;
+}
+.ms-cite svg { width: 15px; height: 15px; }
+
+.ms-disclaimer {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--ms-grey-soft); font-size: 14px;
+  margin-top: 22px;
+}
+.ms-disclaimer svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+.ms-sep { border: 0; border-top: 1px solid var(--ms-line); margin: 26px 0; }
+
+.ms-feedback .ms-feedback-title {
+  margin: 0 0 4px; font-size: 24px; font-weight: 700;
+  color: var(--ms-brand-1600);
+}
+.ms-feedback p { margin: 0 0 16px; color: var(--ms-ink); font-size: 15px; }
+.ms-thumbs { display: flex; gap: 14px; }
+.ms-thumb {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid var(--ms-brand-300); background: #fff;
+  color: var(--ms-brand-1000); cursor: pointer;
+  display: grid; place-items: center;
+}
+.ms-thumb:hover { background: var(--ms-brand-100); }
+.ms-thumb.is-active { background: var(--ms-brand-1000); color: #fff; border-color: var(--ms-brand-1000); }
+.ms-thumb svg { width: 20px; height: 20px; }
+
+/* ---------- side column ---------- */
+.ms-info {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--ms-brand-100);
+  border-radius: 12px; padding: 16px 18px;
+  color: var(--ms-ink); font-size: 15px; line-height: 1.5;
+  margin-bottom: 26px;
+}
+.ms-info svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--ms-brand-1100); margin-top: 1px; }
+.ms-laws-title {
+  margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--ms-brand-1600);
+}
+.ms-law { margin-bottom: 20px; }
+.ms-law a {
+  color: #1d6e60; /* volt #278774: 3,91:1 a #edf4f2 hatteren -> 5,4:1 (1.4.3) */
+  font-weight: 600; font-size: 15px;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.ms-law .ms-law-desc { margin-top: 4px; color: var(--ms-grey); font-size: 14px; line-height: 1.5; }
+
+/* ---------- loading ---------- */
+.ms-loading { display: flex; align-items: center; gap: 12px; color: var(--ms-brand-1100); padding: 24px 4px; font-size: 15px; }
+.ms-spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--ms-brand-300); border-top-color: var(--ms-brand-1000);
+  animation: ms-spin .8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .ms-spinner { animation-duration: 2.4s; } }
+@keyframes ms-spin { to { transform: rotate(360deg); } }
+
+.ms-empty { color: var(--ms-grey); font-size: 15px; padding: 20px 4px; }
+
+.ms-filters-ds { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin: 0 0 16px; }
+.ms-filters-ds > .ms-field { flex: 1 1 240px; max-width: 384px; min-width: 0; }
+.ms-filters-ds > .ms-field[hidden] { display: none; }
+.ms-filters-ds .ms-field > :not(.ms-label) { display: block; width: 100%; }
+
+/* ---------- Keresesi beallitasok: lenyithato szekcio (details/summary) ---------- */
+.ms-settings { margin: 16px 0; }
+.ms-settings-summary {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+  font-size: 15px; font-weight: 600; color: #1f2430; padding: 4px 0;
+}
+.ms-settings-summary::-webkit-details-marker { display: none; }
+.ms-settings-summary::after {
+  content: ""; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px); transition: transform .15s ease;
+}
+.ms-settings[open] > .ms-settings-summary::after { transform: rotate(-135deg) translateY(-2px); }
+.ms-settings-summary:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 3px; border-radius: 4px; }
+.ms-on-dark .ms-settings-summary { color: #fff; }
+.ms-on-dark .ms-settings-summary:focus-visible { outline-color: #37f0bf; }
+.ms-settings > .ms-toggles-ds { margin: 8px 0 16px; }
+@media (prefers-reduced-motion: reduce) { .ms-settings-summary::after { transition: none; } }
+
+/* Szakmai kereso kapcsolo + info ikon (tooltip): sajat sor a tobbi kapcsolo folott */
+.ms-pro-row { flex: 0 0 100%; display: flex; align-items: center; gap: 4px; }
+.ms-info-tip dap-ds-icon-button { color: #1f2430; }
+.ms-on-dark .ms-info-tip dap-ds-icon-button { color: #fff; }
+.ms-info-tip { --dds-tooltip-max-width: 360px; }
+
+/* ---------- szakmai nezet: fulek + dokumentumlistak ---------- */
+.ms-pro { background: #fff; border-radius: var(--dds-radius-lg, 16px); padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.ms-pro-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 16px; border-bottom: 1px solid #d1d7df; }
+.ms-pro-tab {
+  font: inherit; font-size: 15px; font-weight: 600; color: #404753; background: none; border: 0; border-bottom: 3px solid transparent;
+  padding: 10px 12px; cursor: pointer; margin-bottom: -1px;
+}
+.ms-pro-tab[aria-selected="true"] { color: #0b3d3e; border-bottom-color: #0b3d3e; }
+.ms-pro-tab:focus-visible, .ms-pro-panel:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; border-radius: 4px; }
+.ms-pro-count { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 4px; border-radius: 11px; background: #e6eeec; color: #0b3d3e; font-size: 13px; text-align: center; }
+.ms-pro-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.ms-pro-doc { padding-bottom: 16px; border-bottom: 1px solid #e3e8ee; }
+.ms-pro-doc:last-child { border-bottom: 0; }
+.ms-pro-doc-title { font-size: 17px; font-weight: 600; color: #0b3d3e; text-underline-offset: 3px; }
+.ms-pro-doc-meta { margin-top: 4px; font-size: 14px; color: #5a6472; }
+.ms-pro-doc-text { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #1f2430; }
+.ms-pro-none { margin: 0; color: #5a6472; }
+
+/* a "nem minosul hivatalos jogi tanacsadasnak" figyelmeztetes a cim alatt, a tartalom folott */
+.ms-answer-head + .ms-disclaimer { margin-top: -8px; margin-bottom: 22px; }
+
+/* a talalati blokk (#mock-search-results) felso belso margoja nelkul */
+#mock-search-results { padding-top: 0 !important; }
+
+/* hibauzenet (pl. tul rovid kerdes) olvashato a sotet hero hatteren (kontraszt) */
+.ms-on-dark .ms-input-ds::part(feedback), .ms-on-dark .ms-input-ds::part(feedback-base) { color: #ffd2cf; --dds-text-negative-subtle: #ffd2cf; --dds-text-negative-base: #ffd2cf; }
+
+/* Kezdolap hero: a tartalom kozepre igazitva (cim, leiras, kereso, beallitasok) */
+main:has(#mock-search-bar) div:has(> h1.dds-heading-inverted) { text-align: center; }
+.ms-searchbar-wrap.ms-on-dark { max-width: 1000px; margin-inline: auto; }
+.ms-on-dark .ms-settings { text-align: center; }
+.ms-on-dark .ms-toggles-ds, .ms-on-dark .ms-pro-row { justify-content: center; }
+.ms-on-dark .ms-filters-ds { justify-content: center; }
+.ms-on-dark .ms-searchbar-ds { margin-inline: auto; }
+
+
+/* mikrofon (diktalas) gomb: a kereses gombbal azonos kinezet; hallgatas kozben jelzett allapot */
+.ms-mic-ds.is-listening::part(base) { background-color: #fde2df; box-shadow: 0 0 0 2px #c0392b; }
+@media (prefers-reduced-motion: no-preference) { .ms-mic-ds.is-listening::part(base) { animation: ms-mic-pulse 1.2s ease-in-out infinite; } }
+@keyframes ms-mic-pulse { 50% { box-shadow: 0 0 0 5px rgba(192, 57, 43, .25); } }
+
+/* Eszkoztipp - pontosan a njt.jog.gov.hu "Sugo" tippje (#njtTip): 12px Inter, #353B46 hatter, feher szoveg,
+   4px sarok, 5px 8px belso margo, 5px-es nyil felul, 7px tavolsagra a gomb aljatol, kozepre igazitva. */
+.ms-actions [data-tip] { position: relative; }
+.ms-actions [data-tip]::before, .ms-actions [data-tip]::after {
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: 1000000;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.ms-actions [data-tip]::before {
+  content: ""; top: calc(100% + 7px); width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid #353b46;
+}
+.ms-actions [data-tip]::after {
+  content: attr(data-tip); top: calc(100% + 12px);
+  padding: 5px 8px; border-radius: 4px; background: #353b46; color: #fff;
+  font: 400 12px/normal Inter, sans-serif; white-space: nowrap; text-align: center;
+}
+/* csak ravitelkor es billentyuzetes (Tab) fokuszkor; egerkattintas utan nem marad kinn */
+.ms-actions [data-tip]:hover::before, .ms-actions [data-tip]:hover::after,
+.ms-actions [data-tip][data-kbd]::before, .ms-actions [data-tip][data-kbd]::after { opacity: 1; visibility: visible; }
+
+/* "Hivatkozott orszagos jogszabalyok" a valasz kartyajan belul, a visszajelzes (Hasznosnak talalta...) fole */
+.ms-answer-card .ms-laws-section { margin-top: 8px; padding-top: 22px; border-top: 1px solid var(--ms-line); }
+.ms-answer-card .ms-laws-section .ms-laws-title { margin-top: 0; }
+
+/* talalati blokk: egy oszlop, a navigacioval azonos 1200 px-es oszlopban, kozepre igazitva */
+.ms-results { max-width: 1200px; margin-inline: auto; }
+.ms-results-grid { grid-template-columns: minmax(0, 1fr); }
+#mock-search-results { max-width: 1232px !important; margin-inline: auto; width: 100%; }
+
+/* "Hasznosnak talalta a szolgaltatast?" a valaszkartyan kivul, 60 px aljara */
+.ms-results-grid > .ms-feedback { margin-bottom: 60px; }
+.ms-results-grid { row-gap: 28px; }
+
+/* mobil nezet: a kezdolap hero-jaban nincs a zoldeskek bagoly-logo (a desktop valtozat eleve rejtett) */
+main:has(#mock-search-bar) div:has(> div > img[alt="Bagoly Ikon"]), main:has(#mock-search-bar) div:has(> div > img[data-ms-owl]) { display: none !important; }
+
+/* mobil nezet: a hero (fo szekcio) felso es also belso margoja 96 px, mint asztali nezetben */
+@media (max-width: 63.99rem) {
+  main:has(#mock-search-bar) div.py-\[32px\] { padding-block: 96px; }
+}
+
+/* "Legutobbi kereseim" szekcio a kezdolapon: a tartalmi oszlopban (1200 px), a kozlony-lista sablonjaval */
+/* a "Legutobbi kereseim" szekcio ugyanolyan szeles, mint az alatta levo "Miben tud segiteni az MI?" (1200 px oszlop, 16 px oldalmargo) */
+.ms-recent > div { max-width: 1200px !important; }
+.ms-recent .dds-card .dds-heading { margin: 0; }
+
+/* Legutobbi kereseim: lenyithato kartya, a kinyitott kozlony (MI altal generalt osszefoglalo) kinezetevel */
+.ms-recent-card .ms-recent-panel[hidden] { display: none; }
+.ms-recent-card ._card_2cj0j_2 { margin-top: 12px; }
+.ms-recent-card .ck-content .ms-lead { font-weight: 700; margin: 12px 0 6px; }
+.ms-recent-card .ck-content a { color: #1d6e60; text-decoration: underline; }
+.ms-recent-card .ms-recent-toggle { flex: 0 0 auto; }
+
+/* kulso hivatkozas ikon a szakmai talalatok linkjei mellett */
+.ms-pro-ext { display: inline-flex; vertical-align: -2px; margin-left: 6px; }
+.ms-pro-ext svg { width: 16px; height: 16px; }
+
+/* kezdolap: a cim + leiras tarolo ugyanolyan szeles, mint a keresomezo (760 px), kozepre igazitva */
+main:has(#mock-search-bar) div:has(> h1.dds-heading-inverted) { max-width: 760px !important; width: 100%; margin-inline: auto; }
+
+/* hibauzenet (feedback) a mezo alatt: a gombok a mezo aljan maradnak, nem a hibauzenet alatt */
+.ms-searchbar-ds:has(.ms-input-ds[feedback]) .ms-actions { bottom: 32px; }
+
+/* ---------- Keresesi beallitasok parbeszedablak + a mezo bal also sarkaban levo gomb ---------- */
+.ms-actions.ms-actions-left { right: auto; left: 9px; }
+.ms-settings-dialog {
+  width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+  padding: 24px; border: 0; border-radius: 16px; background: #fff; color: #1f2430;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .35); margin: auto;
+}
+.ms-settings-dialog::backdrop { background: rgba(11, 61, 62, .55); }
+.ms-settings-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.ms-settings-title { margin: 0; font-size: 22px; font-weight: 700; color: #0b3d3e; }
+.ms-settings-x {
+  flex: 0 0 38px; width: 38px; height: 38px; min-width: 38px; box-sizing: border-box; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #0b3d3e;
+  font-size: 26px; line-height: 1; cursor: pointer;
+}
+.ms-settings-x:focus-visible, .ms-settings-done:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-settings-dialog .ms-toggles-ds { flex-direction: column; align-items: flex-start; margin: 0 0 16px; gap: 16px; }
+.ms-settings-dialog .ms-pro-row { flex: 0 0 auto; justify-content: flex-start; }
+.ms-settings-dialog dap-ds-switch, .ms-on-dark .ms-settings-dialog .ms-toggles-ds dap-ds-switch { color: #1f2430; }
+.ms-settings-dialog .ms-info-tip dap-ds-icon-button, .ms-on-dark .ms-settings-dialog .ms-info-tip dap-ds-icon-button { color: #1f2430; }
+.ms-settings-dialog .ms-filters-ds { flex-direction: column; align-items: stretch; justify-content: flex-start; margin: 0 0 16px; }
+.ms-settings-dialog .ms-filters-ds > .ms-field { max-width: none; flex: 0 0 auto; }
+.ms-settings-dialog .ms-label, .ms-on-dark .ms-settings-dialog .ms-label { color: #1f2430; }
+.ms-settings-foot { display: flex; justify-content: flex-end; }
+
+/* a valasz fejleceben nincs bagoly-illusztracio: a felirat minden sarka kerek */
+.ms-answer-label { border-bottom-left-radius: 10px; }
+
+/* valasz azonosito: lathato felirat az azonosito folott */
+.ms-answer-id { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-top: 0; }
+.ms-answer-id-label { font-family: inherit; font-style: normal; font-weight: 600; font-size: 12px; color: #404753; }
+
+/* a valasz a sotet hero-ban, a kereso alatt: a betoltes / ures allapot felirata vilagos */
+#mock-search-bar + #mock-search-results .ms-loading, #mock-search-bar + #mock-search-results .ms-empty { color: #fff; }
+#mock-search-bar + #mock-search-results { padding-top: 0 !important; }
+
+/* a valasz szelessege = a keresomezo szelessege (760 px); a kezdolapon kozepre igazitva, a kereso oldalon a mezo bal szelehez */
+#mock-search-results { max-width: 760px !important; padding-inline: 0 !important; margin-inline: 0; align-self: flex-start; }
+.ms-results { max-width: none; }
+main:has(#mock-search-bar) #mock-search-results { margin-inline: auto; align-self: center; }
+
+/* kezdolap: a hero hattere a valaszkartya figyelmeztetes-sora alatt er veget, a kartya tovabbi resze kilog */
+#mock-search-results.is-fit { overflow: visible; }
+main:has(#mock-search-results.is-fit) div.py-\[32px\] { padding-bottom: 0 !important; }
+main:has(#mock-search-results.is-fit) > div.relative { margin-bottom: var(--ms-overflow, 0px); }
+main:has(#mock-search-results.is-fit) [class*="_hero_"] { position: relative; z-index: 10; }
+
+/* valasz azonosito a jogszabaly-lista alatt, elvalasztoval; balra igazitva */
+.ms-answer-foot .ms-answer-id { align-items: flex-start; min-width: 0; }
+.ms-answer-card > .ms-sep, .ms-pro > .ms-sep { margin: 22px 0 18px; }
+
+/* Legutobbi kereseim: elvalaszto a szekcio felett; a kartya cime bekezdes (nem h5), a h5 kinezetevel */
+.ms-recent .ms-recent-q { margin: 0; }
+
+/* az elvalaszto csak akkor latszik, ha van valasz-szekcio */
+.ms-recent .ms-recent-divider { display: none; }
+main:has(#mock-search-results .ms-answer-card, #mock-search-results .ms-pro) .ms-recent .ms-recent-divider { display: block; }
+
+/* Legutobbi kereseim kartyak szovege: normal (nem felkover) vastagsag */
+.ms-recent .ms-recent-q { font-weight: 400; }
+
+/* Legutobbi kereseim: datum a kerdes alatt; a 3. utani kartyak elrejtve ("Mutass tobbet") */
+.ms-recent-card[hidden] { display: none; }
+.ms-recent .ms-recent-date { margin: 4px 0 0; }
+.ms-recent .ms-recent-more { min-width: 200px; }
+
+/* dokumentum hozzaadasa: a kivalasztott fajlok cimkei a mezo alatt */
+.ms-attachments { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ms-on-dark .ms-attachments { max-width: 760px; margin-inline: auto; }
+.ms-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 4px 6px 4px 12px; border-radius: 999px;
+  background: #e6eeec; color: #1f2430; font-size: 14px; }
+.ms-on-dark .ms-chip { background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .35); }
+.ms-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; }
+.ms-chip-x { width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.ms-chip-x:hover { background: rgba(0, 0, 0, .12); }
+.ms-chip-x:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+
+/* ---------- Kereses gomb: a megadott gomb-stilus allapotai (enabled / hover / pressed / focused / disabled / loading) ---------- */
+.ms-search-ds::part(base) { background-color: #dbf1ee; color: #1f7a6a; transition: background-color .12s ease, color .12s ease, box-shadow .12s ease; }
+.ms-search-ds:hover::part(base) { background-color: #c4ece4; color: #1f7a6a; }
+.ms-search-ds:active::part(base) { background-color: #b2f0e2; color: #0b3d3e; }
+.ms-search-ds:focus-within::part(base) { background-color: #c4ece4; color: #1f7a6a; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #42f9c8; }
+.ms-search-ds[disabled]::part(base), .ms-search-ds.is-disabled::part(base) { background-color: #cbd0d9; color: #7c8494; box-shadow: none; cursor: not-allowed; }
+.ms-search-ds { position: relative; }
+
+/* kulso hivatkozas ikon a (uj ablakban megnyilo) jogszabaly-linkek mellett */
+.ms-law-ext { display: inline-flex; vertical-align: -2px; margin-left: 6px; }
+.ms-law-ext svg { width: 15px; height: 15px; }
+
+/* Legutobbi kereseim: a szekcio cime kozepre igazitva */
+.ms-recent h2 { text-align: left; }
+
+/* ---------- Jogszabalyszoveg parbeszedablak ---------- */
+.ms-law-link { cursor: pointer; }
+.ms-law-dialog {
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: hidden;
+  padding: 24px; border: 0; border-radius: 16px; background: #fff; color: #1f2430;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .35); margin: auto;
+}
+.ms-law-dialog[open] { display: flex; flex-direction: column; }
+.ms-law-dialog::backdrop { background: rgba(11, 61, 62, .55); }
+.ms-law-dialog .ms-settings-head { align-items: flex-start; flex: 0 0 auto; }
+.ms-law-sub { margin: 4px 0 0; color: #4a5160; font-size: 14px; line-height: 1.5; }
+.ms-law-text {
+  flex: 1 1 auto; overflow: auto; min-height: 0; padding: 4px 12px 4px 0;
+  font-size: 15px; line-height: 1.6;
+}
+.ms-law-text:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-law-text p { margin: 0 0 8px; }
+.ms-law-par { margin: 16px 0 6px; font-size: 16px; font-weight: 700; color: #0b3d3e; }
+.ms-law-sec:first-child .ms-law-par { margin-top: 0; }
+.ms-law-sec + .ms-law-sec { border-top: 1px solid #dfe5e3; margin-top: 16px; padding-top: 4px; }
+.ms-law-src { flex: 0 0 auto; margin: 16px 0 0; padding-top: 12px; border-top: 1px solid #dfe5e3; color: #4a5160; font-size: 13px; }
+.ms-law-sec { border-radius: 6px; }
+.ms-law-sec:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 4px; }
+
+.ms-pro > .ms-sep { margin: 22px 0 18px; }
+
+/* szakmai jogszabaly-talalat: hatalyossag-ikon elol, idopont-valaszto naptar a vegen */
+.ms-pro-law { display: grid; grid-template-columns: 1fr auto; column-gap: 14px; align-items: start; }
+.ms-pro-doc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.ms-pro-status {
+  display: inline-flex; align-items: center; box-sizing: border-box; height: 24px; padding: 0 10px;
+  border: 1px solid; border-radius: 8px; font-size: 12px; font-weight: 700; line-height: 1; white-space: nowrap;
+}
+.ms-pro-status.is-on { background: #e4f2ec; border-color: #458c6f; color: #2f6e55; }
+.ms-pro-status.is-off { background: #fdecea; border-color: #c9291f; color: #b3261e; }
+.ms-pro-doc-dates { margin-top: 2px; font-size: 14px; color: #404753; }
+.ms-pro-cal { position: relative; display: inline-flex; }
+.ms-pro-cal-btn { display: inline-flex; padding: 4px; border: 0; border-radius: 6px; background: none; color: #1d6e60; cursor: pointer; }
+.ms-pro-cal-btn:hover { background: rgba(2, 118, 113, .08); }
+.ms-pro-cal-btn:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-pro-cal-input { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+.ms-pro-doc-title.ms-law-link { text-decoration: underline; text-underline-offset: 3px; }
+
+/* valasz: letoltes + masolas gombok a fejlecben, a "Orszagos jogszabalyokon alapulo valasz" cimkevel egy vonalban */
+.ms-answer-tools { display: flex; flex: 0 0 auto; gap: 8px; align-items: center; }
+.ms-tool {
+  display: inline-flex; align-items: center; justify-content: center; position: relative; width: 32px; height: 32px; box-sizing: border-box;
+  padding: 0; border: 0; border-radius: 8px; background: #eceef2; color: #282c35; cursor: pointer;
+}
+.ms-tool svg { width: 16px; height: 16px; }
+.ms-tool svg path { fill: #282c35; }
+.ms-tool:hover { background: #dcdfe5; }
+.ms-tool:active { background: #cdd1d9; }
+.ms-tool:focus-visible { background: #dcdfe5; outline: 2px solid #7af0cf; outline-offset: 0; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #7af0cf; outline: none; }
+.ms-tool.is-done { background: #cdd1d9; }
+/* eszkoztipp (mint a kereso gombjain), a sarok miatt jobbra igazitva */
+.ms-tool::before, .ms-tool::after { position: absolute; z-index: 1000000; opacity: 0; visibility: hidden; pointer-events: none; }
+.ms-tool::before { content: ""; left: 50%; top: calc(100% + 2px); margin-left: -5px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid #353b46; }
+.ms-tool::after {
+  content: attr(data-tip); right: 0; top: calc(100% + 7px); padding: 5px 8px; border-radius: 4px; background: #353b46; color: #fff;
+  font: 400 12px/normal Inter, sans-serif; white-space: nowrap;
+}
+.ms-tool:hover::before, .ms-tool:hover::after, .ms-tool:focus-visible::before, .ms-tool:focus-visible::after { opacity: 1; visibility: visible; }
+@media print { .ms-answer-tools { display: none; } }
+
+/* az ID es a letoltes/masolas gombok egy sorban: ID balra, gombok a jobb also sarokban */
+.ms-answer-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ms-answer-foot .ms-answer-id-value { overflow-wrap: anywhere; }
+.ms-answer-foot .ms-answer-tools { margin-left: auto; align-self: flex-end; }
+/* a gombok az oldal aljan vannak: az eszkoztipp felfele nyilik */
+.ms-tool::before { top: auto; bottom: calc(100% + 2px); border-bottom: 0; border-top: 5px solid #353b46; }
+.ms-tool::after { top: auto; bottom: calc(100% + 7px); }
+
+/* a kezdolap hero szovege elsore is kozepre igazitva (ne csak a script altal epitett kereso utan) */
+main:has(#mock-search-bar) div:has(> h1.dds-heading-inverted) { text-align: center; }
+
+/* ---------- "Legutobbi kereseim": kartyas racs (3 oszlop), kattintasra a kerdes lefut ---------- */
+.ms-recent .ms-recent-divider { display: none; }
+.ms-recent h2 { text-align: left; }
+.ms-rc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ms-rc {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; width: 100%;
+  padding: 18px 18px 20px; border: 1px solid #dde7e3; border-radius: 16px; background: #fff; color: #404753; cursor: pointer; font: inherit;
+}
+.ms-rc[hidden] { display: none; }
+.ms-rc:hover { border-color: #0b3d3e; box-shadow: 0 4px 14px -8px rgba(11, 61, 62, .45); }
+.ms-rc:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-rc-date { font: 600 12px/1.3 Poppins, sans-serif; color: #5a6472; }
+.ms-rc-title { font: 600 18px/1.25 Poppins, sans-serif; color: #1f2430; }
+.ms-rc-text {
+  font: 400 14px/1.5 Inter, sans-serif; color: #404753; margin-top: 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ms-recent-more {
+  min-width: 200px; padding: 10px 22px; border: 2px solid #0b3d3e; border-radius: 8px; background: transparent;
+  color: #0b3d3e; font: 600 16px/1.4 Inter, sans-serif; cursor: pointer;
+}
+.ms-recent-more:hover { background: rgba(11, 61, 62, .06); }
+.ms-recent-more:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+@media (max-width: 720px) { .ms-rc-grid { grid-template-columns: 1fr; } }
+
+/* ---------- "Miben tud segiteni az MI?": visszafogott kartya (kozepre igazitott cim + feher kartya) ---------- */
+.ms-help { width: 100%; margin-top: 0; }
+.ms-help-in { max-width: 1200px; margin: 0 auto; padding: 96px 16px 72px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px; }
+.ms-help h2 { margin: 0; font: 700 22px/1.25 Poppins, sans-serif; color: #0b2b2b; text-align: center; }
+.ms-help-card {
+  display: flex; align-items: flex-start; gap: 28px; padding: 40px 44px; box-sizing: border-box;
+  background: #fff; border-radius: 24px;
+}
+.ms-help-text { flex: 1 1 auto; min-width: 0; color: #1f2430; font: 400 16px/1.6 Inter, sans-serif; }
+.ms-help-lead { margin: 0 0 16px; }
+.ms-help-sub { margin: 0 0 6px; font-weight: 600; }
+.ms-help-list { margin: 0 0 16px; padding-left: 22px; list-style: disc; }
+.ms-help-list li { margin: 0 0 4px; padding-left: 2px; }
+.ms-help-note { margin: 0; color: #5a6472; font-size: 14px; }
+.ms-help-art { flex: 0 0 280px; align-self: stretch; display: flex; align-items: center; justify-content: center; min-height: 220px; border-radius: 20px; background: #eef6f3; }
+.ms-help-owl { display: inline-flex; align-items: center; justify-content: center; width: 140px; height: 140px; border-radius: 50%; background: #3af0c0; }
+.ms-help-owl img { width: 64px; height: auto; }
+@media (max-width: 720px) {
+  .ms-help-art { flex: none; align-self: stretch; min-height: 130px; }
+  .ms-help-owl { width: 96px; height: 96px; }
+  .ms-help-owl img { width: 44px; }
+  .ms-help-in { padding: 48px 16px 48px; gap: 20px; }
+  .ms-help-card { flex-direction: column; gap: 20px; padding: 24px 20px; border-radius: 20px; }
+    }
+
+.ms-help-cta {
+  margin-top: 20px; padding: 10px 22px; border: 0; border-radius: 8px; background: #38e0ac; color: #0b3d3e; cursor: pointer;
+  font: 700 16px/1.4 Inter, sans-serif;
+}
+.ms-help-cta:hover { background: #33cc9d; }
+.ms-help-cta:focus-visible { outline: 3px solid #0b3d3e; outline-offset: 3px; }
+
+/* hibauzenet a keresomezoben, a jobb felso sarokban: piros ikon + piros szoveg */
+.ms-field-error {
+  position: absolute; top: 14px; right: 18px; z-index: 11; display: flex; align-items: center; gap: 8px;
+  max-width: calc(100% - 36px); pointer-events: none; color: #c8281a; font: 500 14px/1.4 Inter, sans-serif;
+}
+.ms-field-error-icon {
+  flex: 0 0 16px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; min-width: 16px; box-sizing: border-box;
+  border-radius: 50%; background: #c8281a; color: #fff; font: 700 11px/1 Inter, sans-serif;
+}
+
+/* ---------- Valasz-betoltes (jog.gov.hu mintaja): forgo gyuru + bagoly, pulzalo szoveg, slideIn ---------- */
+@keyframes ms-slidein { 0% { opacity: 0; transform: translateY(-1rem); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes ms-ring-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes ms-ring-color { 50% { border-bottom-color: #227b6b; } 0%, 100% { border-bottom-color: #37f0bf; } }
+@keyframes ms-pulse { 50% { opacity: .5; } }
+.ms-slidein { animation: ms-slidein .5s ease-out 1; }
+.ms-pending { display: none !important; }
+.ms-ld-card { background: #fff; border-radius: 18px; padding: 34px 40px; box-shadow: 0 14px 40px -22px rgba(11, 61, 62, .32); }
+.ms-ld { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; text-align: center; }
+.ms-ld--left { flex-direction: row; justify-content: flex-start; gap: 10px; text-align: left; }
+.ms-ld-ring-wrap { position: relative; display: inline-block; width: 36px; height: 36px; flex: 0 0 auto; }
+.ms-ld-owl { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: #227b6b; }
+.ms-ld-owl img { width: 14px; height: auto; display: block; }
+.ms-ld-ring {
+  display: inline-block; box-sizing: border-box; width: 36px; height: 36px; border: 5px solid #fff; border-bottom-color: #37f0bf; border-radius: 50%;
+  animation: ms-ring-rotate 1s linear infinite, ms-ring-color 1.7s ease-in-out infinite;
+}
+.ms-ld-text { margin: 0; font: 500 14px/1.5 Inter, sans-serif; color: #227b6b; animation: ms-pulse 2s cubic-bezier(.4, 0, .6, 1) infinite; }
+.ms-ld-row { margin: 0 0 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .ms-ld-ring { animation-duration: 2.4s, 3.4s; }
+  .ms-slidein { animation: none; }
+}
+
+/* a kezdolap hero leirasa (a cim alatt) 16 px */
+main:has(#mock-search-bar) h1.dds-heading-inverted + p { font-size: 16px !important; line-height: 24px !important; }
+
+/* korabbi keres valasza parbeszedablakban */
+.ms-recent-dialog { width: min(860px, calc(100vw - 32px)); }
+.ms-rd-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding-right: 8px; }
+.ms-rd-body:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-recent-dialog .ms-answer-card { box-shadow: none; padding: 8px 0 0; background: transparent; }
+.ms-recent-dialog .ms-settings-title { font-size: 20px; }
+
+.ms-help-examples { list-style: none; padding-left: 0; }
+.ms-help-examples li { margin: 0 0 8px; padding: 8px 12px; border-left: 3px solid #38e0ac; background: #f3f8f6; border-radius: 0 8px 8px 0; font-style: italic; }
+.ms-help h3.ms-help-sub { margin: 0 0 8px; font: 600 16px/1.5 Inter, sans-serif; color: #1f2430; }
+.ms-help-text .ms-help-list + h3.ms-help-sub { margin-top: 20px; }
+
+/* ---------- "Miben tud segiteni az MI?": temakori kartyak (dap.gov.hu Eletesemenyek mintajara) ---------- */
+.ms-help-in { max-width: 1200px; }
+.ms-help-lead { margin: 0 auto; max-width: 760px; text-align: center; font: 400 16px/1.6 Inter, sans-serif; color: #404753; }
+.ms-cat-grid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ms-cat { display: flex; flex-direction: column; gap: 8px; padding: 24px; box-sizing: border-box; background: #fff; border-radius: 16px; border: 1px solid #dde7e3; }
+.ms-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #d3f6ec; color: #0b3d3e; margin-bottom: 4px; }
+.ms-cat-title { margin: 0; font: 600 18px/1.3 Poppins, sans-serif; color: #1f2430; }
+.ms-cat-text { margin: 0; font: 400 15px/1.55 Inter, sans-serif; color: #404753; }
+.ms-cat-ex { margin: 4px 0 0; font: 400 14px/1.55 Inter, sans-serif; color: #5a6472; font-style: italic; }
+.ms-cat-ex span { font-style: normal; font-weight: 600; color: #1f2430; }
+.ms-help-in .ms-help-note { margin: 0 auto; max-width: 760px; text-align: center; }
+.ms-help-cta-row { display: flex; justify-content: center; }
+.ms-help-cta { margin-top: 4px; }
+@media (max-width: 1023.98px) { .ms-cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ms-cat-grid { grid-template-columns: 1fr; } .ms-cat { padding: 20px; } }
+
+/* a korabbi keresesek kartyai ugyanolyanok, mint a "Miben tud segiteni az MI?" kartyai */
+.ms-rc { padding: 24px; gap: 8px; border-radius: 16px; border: 1px solid #dde7e3; background: #fff; }
+.ms-rc-date { font: 600 13px/1.3 Inter, sans-serif; color: #5a6472; }
+.ms-rc-title { font: 600 18px/1.3 Poppins, sans-serif; color: #1f2430; }
+.ms-rc-text { font: 400 15px/1.55 Inter, sans-serif; color: #404753; margin-top: 0; -webkit-line-clamp: 3; }
+.ms-rc-grid { gap: 16px; }
+@media (max-width: 1023.98px) { .ms-rc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ms-rc-grid { grid-template-columns: 1fr; } .ms-rc { padding: 20px; } }
+
+/* "Legutobbi kereseim" fejlec: a cim balra, az "Osszes keresesem" link jobbra, egy sorban */
+.ms-recent-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ms-recent-head h2 { margin: 0; }
+.ms-recent-all {
+  font: 500 14px/1.4 Inter, sans-serif; color: #2f7a6b; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+}
+.ms-recent-all:hover { color: #0b3d3e; }
+.ms-recent-all:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 3px; border-radius: 2px; }
+/* az "Osszes keresesem" oldal */
+.ms-allsearches { width: 100%; }
+.ms-allsearches-in { max-width: 1200px; margin: 0 auto; padding: 40px 16px 72px; box-sizing: border-box; }
+.ms-rc-answer { margin-top: 6px; padding-top: 10px; border-top: 1px solid #e3e8ee; font: 400 14px/1.55 Inter, sans-serif; color: #404753;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* az "Osszes keresesem" oldalon sincs bagoly-ikon a hero-ban */
+main[data-ms-all] div:has(> div > img[alt="Bagoly Ikon"]), main[data-ms-all] div:has(> div > img[data-ms-owl]) { display: none !important; }
+
+/* ritkabban hasznalt szavak magyarazata */
+.ms-term-wrap { position: relative; display: inline; }
+.ms-term {
+  display: inline; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: help;
+  text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: #2f7a6b;
+}
+.ms-term:hover, .ms-term[aria-expanded="true"] { background: rgba(56, 224, 172, .22); border-radius: 3px; }
+.ms-term:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; border-radius: 3px; }
+.ms-term-def {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: max-content; max-width: min(300px, 80vw); padding: 8px 12px; border-radius: 6px;
+  background: #353b46; color: #fff; font: 400 14px/1.45 Inter, sans-serif; text-align: left; font-style: normal; font-weight: 400; box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+}
+.ms-term-def[hidden] { display: none; }
+@media (hover: hover) { .ms-term-wrap:hover > .ms-term-def[hidden] { display: block; } }
+.ms-term:focus-visible + .ms-term-def[hidden] { display: block; }
+
+/* sormagassag 1,5: a valaszblokk teljes tartalmaban, a korabbi keres valaszanak parbeszedablakaban is */
+.ms-answer-card, .ms-pro, .ms-rd-body, .ms-rd-body .ms-answer-card { line-height: 1.5; }
+.ms-answer-card p, .ms-answer-card li, .ms-rd-body p, .ms-rd-body li { line-height: 1.5; }
+
+/* mobil nezet: a valasz torzsszovege 16 px (asztali nezeten 18 px) */
+@media (max-width: 1023.98px) {
+  .ms-answer-body { font-size: 16px; }
+}
+
+/* ---------- "Miben tud segiteni az MI?": fejlec-sor (cim + leiras balra, gomb jobbra); a komponensek es a tipografia valtozatlan ---------- */
+.ms-help-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.ms-help-top .ms-help-lead { margin: 12px 0 0; max-width: 640px; text-align: left; }
+.ms-help h2 { text-align: left; }
+.ms-help-cta-row { display: flex; margin: 0; }
+.ms-help-cta { margin: 0; }
+.ms-cat-grid { margin: 0; }
+
+/* ---------- "Legutobbi kereseim": elozmeny-gomb a keresomezoben + a mezo alatt nyilo panel ---------- */
+.ms-history-btn {
+  display: inline-flex; align-items: center; justify-content: center; position: relative; width: 38px; height: 38px; padding: 0; border: 0;
+  border-radius: 50%; background: transparent; color: #404753; cursor: pointer;
+}
+.ms-history-btn:hover { background: rgba(2, 118, 113, .08); }
+.ms-history-btn.is-open { background: #e0e2e6; }
+.ms-history-btn:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+.ms-history {
+  width: 760px; max-width: 100%; margin: 12px auto 0; box-sizing: border-box; padding: 24px 28px 12px;
+  background: #fff; border-radius: 16px; color: #404753; text-align: left;
+}
+.ms-history[hidden] { display: none; }
+.ms-history-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.ms-history-title { margin: 0; font: 600 22px/1.3 Poppins, sans-serif; color: #5a6472; }
+.ms-history-list { list-style: none; margin: 0; padding: 0; }
+.ms-history-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 16px 0; border: 0; background: none;
+  font: 400 18px/1.5 Inter, sans-serif; color: #404753; text-align: left; cursor: pointer;
+}
+.ms-history-row:hover .ms-history-text { text-decoration: underline; text-underline-offset: 4px; }
+.ms-history-row:focus-visible { outline: 2px solid #0b3d3e; outline-offset: -2px; border-radius: 6px; }
+.ms-history-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-history-row svg { flex: 0 0 auto; }
+@media (max-width: 640px) { .ms-history { padding: 20px 16px 8px; } .ms-history-row { font-size: 16px; } .ms-history-title { font-size: 20px; } }
+
+/* az elozmeny-panel a mezo FOLOTT jelenik meg (nem noveli a zold teruletet), kisebb tipografiaval */
+.ms-history {
+  position: absolute; left: 0; right: 0; top: calc(100% + 12px); width: auto; margin: 0; z-index: 30;
+  padding: 16px 20px 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+}
+.ms-history-title { font-size: 16px; }
+/* megnyitaskor ugyanaz a be-animacio, mint a navigacios legordulokon (.12s, atlatszosag + 4px csuszas) */
+@keyframes ms-hist-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: no-preference) { .ms-history:not([hidden]) { animation: ms-hist-in .12s ease; } }
+.ms-history .ms-recent-all { font-size: 12px; }
+.ms-history-row { font-size: 14px; padding: 8px; }
+.ms-history-row svg { width: 20px; height: 20px; }
+@media (max-width: 640px) { .ms-history { padding: 16px 12px 8px; } .ms-history-row { font-size: 14px; } .ms-history-title { font-size: 16px; } }
+.ms-history:focus { outline: none; }
+.ms-history:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+
+/* kezdolap: h1 36px */
+main:has(#mock-search-bar) h1.dds-heading-inverted { font-size: 36px !important; line-height: 44px !important; }
+
+/* "Miben tud segiteni az MI?": kozepre igazitott cim, 3 kartya egy sorban, alatta a Kerdezek gomb */
+.ms-help-in { gap: 32px; align-items: stretch; }
+.ms-help h2 { text-align: center; }
+.ms-cat-grid { margin: 0; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+.ms-cat { flex-direction: row; align-items: flex-start; gap: 16px; padding: 24px; border-radius: 16px; border: 1px solid #dde7e3; }
+.ms-cat-icon { flex: 0 0 24px; width: 24px; height: 24px; margin: 4px 0 0; border-radius: 0; background: none; color: #404753; }
+.ms-cat-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ms-cat-title { font: 600 20px/1.3 Poppins, sans-serif; color: #1f2430; }
+.ms-cat-qs { list-style: none; margin: 0; padding: 0; font: 400 16px/1.5 Inter, sans-serif; color: #404753; }
+.ms-help-cta-row { justify-content: center; margin: 0; }
+@media (max-width: 1023.98px) { .ms-cat-grid { grid-template-columns: 1fr; } }
+
+/* kezdolap leiras: sortores csak szelesebb kijelzon */
+.ms-desc-br { display: none; }
+@media (min-width: 640px) { .ms-desc-br { display: inline; } }
+
+/* korabbi keres valasza (parbeszedablak): 48 px belso margo, nincs vizszintes gorgetes */
+.ms-recent-dialog { padding: 48px; }
+.ms-rd-body { overflow-x: hidden; padding-right: 16px; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .ms-recent-dialog { padding: 24px; } }
+
+/* ===== Figma-terv: "Miben tud segiteni az MI?" kartyak (ikon felul) es "Jogi hirek" (3 oszlop) ===== */
+.ms-cat-grid { gap: 24px; }
+.ms-cat { flex-direction: column; align-items: stretch; gap: 12px; padding: 24px; border-radius: 12px; border: 0; box-shadow: 0 1px 2px rgba(11, 43, 43, .06); }
+.ms-cat-icon { flex: none; margin: 0; }
+.ms-cat-title { font: 600 18px/1.3 Poppins, sans-serif; }
+.ms-cat-body { gap: 8px; }
+.ms-cat-qs { font: 400 14px/1.6 Inter, sans-serif; }
+.ms-news { width: 100%; }
+.ms-news-in { max-width: 1232px; margin: 0 auto; padding: 24px 16px 96px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px; }
+.ms-news h2 { margin: 0; font: 700 22px/1.25 Poppins, sans-serif; color: #0b2b2b; text-align: center; }
+.ms-news-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: stretch; width: 100%; max-width: 1152px; margin: 0 auto; }
+.ms-news-col { display: flex; flex-direction: column; justify-content: space-between; gap: 32px; min-width: 0; }
+.ms-news-t { margin: 0; font: 700 18px/1.45 Inter, sans-serif; color: #0b2b2b; }
+.ms-news-t a { color: inherit; text-decoration: none; }
+.ms-news-t a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.ms-news-t a:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; border-radius: 2px; }
+.ms-news-d { margin: 8px 0 0; font: 400 16px/1.5 Inter, sans-serif; color: #404753; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ms-news-feat { display: flex; flex-direction: column; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(11, 43, 43, .06); }
+.ms-news-img { display: block; aspect-ratio: 552 / 317; overflow: hidden; }
+.ms-news-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ms-news-feat { border-radius: 12px; }
+.ms-news-feat .ms-news-t { padding: 16px; font-size: 20px; line-height: 1.3; }
+.ms-news-more { display: flex; justify-content: center; }
+.ms-news-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 20px; box-sizing: border-box; border: 1px solid #0b3d3e; border-radius: 6px; color: #0b3d3e; font: 600 14px/1 Inter, sans-serif; text-decoration: none; background: transparent; }
+.ms-news-btn:hover { background: #e3efec; }
+.ms-news-btn:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+@media (max-width: 1023.98px) { .ms-news-grid { grid-template-columns: 1fr; gap: 32px; } .ms-news-col { gap: 32px; } }
+
+/* Szakmai kereso info-tippje: ugyanaz a kinezet, mint a tobbi eszkoztippnek (#353b46, 12px Inter, 4px sarok, nyil felul) */
+.ms-pro-row { position: relative; }
+.ms-info-tip { display: inline-flex; }
+.ms-info-pop {
+  position: absolute; top: calc(100% + 12px); left: 0; z-index: 1000000; width: max-content; box-sizing: border-box;
+  padding: 5px 8px; border-radius: 4px; background: #353b46; color: #fff;
+  font: 400 12px/1.4 Inter, sans-serif; text-align: left; white-space: normal;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.ms-info-pop::before {
+  content: ""; position: absolute; bottom: 100%; left: var(--ms-arrow-x, 12px); transform: translateX(-50%);
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid #353b46;
+}
+.ms-info-tip.is-open .ms-info-pop { opacity: 1; visibility: visible; }
+
+/* mobilon (kis kijelzo, erintes) az ikongombok eszkoztippje ravitelre/nyomasra nem jelenik meg
+   (a hover erintesnel a gombon "ragad"); a billentyuzetes fokusz-tipp megmarad, a gomboknak aria-label-juk van */
+@media (max-width: 640px) {
+  .ms-actions [data-tip]:hover:not([data-kbd])::before, .ms-actions [data-tip]:hover:not([data-kbd])::after,
+  .ms-tool:hover:not(:focus-visible)::before, .ms-tool:hover:not(:focus-visible)::after { opacity: 0; visibility: hidden; }
+}
+
+/* Jogszabalyhely egy mar nyitott parbeszedablakban: a tartalom az ablakon belul cserelodik, bal felso "Vissza" nyillal */
+.ms-sub-hidden { display: none !important; }
+.ms-sub-view { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.ms-sub-view .ms-settings-head { align-items: flex-start; flex: 0 0 auto; flex-wrap: wrap; row-gap: 8px; }
+.ms-sub-view .ms-settings-x { margin-left: auto; }
+.ms-sub-titles { order: 3; flex: 0 0 100%; min-width: 0; }   /* a cim a Vissza gomb (es a Bezaras) ALATT, teljes szelessegben */
+.ms-sub-back {
+  flex: 0 0 38px; width: 38px; height: 38px; min-width: 38px; box-sizing: border-box; padding: 0; border: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #0b3d3e; cursor: pointer;
+}
+.ms-sub-back:hover { background: rgba(2, 118, 113, .08); }
+.ms-sub-back:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 2px; }
+
+/* "Miben tud segiteni az MI?": kinyilo panelek (Figma 939-3121). Egyszerre egy nyitott (szelesebb, vilagoszold hatter, pelda-kerdesekkel),
+   a tobbi osszehuzva: ikon + cim + "+" gomb. */
+.ms-acc { list-style: none; margin: 0 auto; padding: 0; width: 100%; max-width: 1152px; display: flex; gap: 32px; align-items: stretch; }
+.ms-acc-card {
+  flex: 1 1 0; min-width: 0; min-height: 290px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column;
+  background: #fff; border-radius: 12px; overflow: hidden; transition: flex-grow .4s ease, background-color .3s ease;
+}
+.ms-acc-card.is-open { flex-grow: 2.5; background: #d5e8e3; }
+.ms-acc-h { margin: 0; flex: 1 1 auto; display: flex; font: inherit; }
+.ms-acc-card.is-open .ms-acc-h { flex: 0 0 auto; }
+.ms-acc-btn {
+  flex: 1 1 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: 100%; margin: 0; padding: 0;
+  border: 0; background: transparent; color: #1f2430; text-align: left; cursor: pointer; font: inherit;
+}
+.ms-acc-card.is-open .ms-acc-btn { flex: 0 0 auto; cursor: default; }
+.ms-acc-btn:focus-visible { outline: 2px solid #0b3d3e; outline-offset: 4px; border-radius: 6px; }
+.ms-acc-ic { display: inline-flex; color: #1f2430; }
+.ms-acc-title { font: 600 20px/1.25 Poppins, sans-serif; color: #1f2430; }
+.ms-acc-plus {
+  margin-top: auto; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; box-sizing: border-box;
+  border-radius: 8px; background: #dcf8ef; color: #1f2430; transition: background-color .2s ease;
+}
+.ms-acc-card:not(.is-open) .ms-acc-btn:hover .ms-acc-plus { background: #bff0df; }
+.ms-acc-card.is-open .ms-acc-plus { display: none; }
+.ms-acc-panel { margin-top: 8px; }
+.ms-acc-panel[hidden] { display: none; }
+.ms-acc-desc { margin: 0 0 12px; font: 400 14px/1.5 Inter, sans-serif; color: #404753; }
+/* "Pelda kerdesek": a cimmel egy sorban, a kartya jobb szelen (nyitott panelen); ugyanaz a szin/meret, mint a valasz "nem minosul hivatalos jogi tanacsadasnak" sora */
+.ms-acc-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; width: 100%; }
+.ms-acc-qs { list-style: none; margin: 0; padding: 0; }
+.ms-acc-q {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 44px; margin: 0; padding: 6px 0;
+  border: 0; background: transparent; color: #1f2430; font: 600 14px/1.4 Inter, sans-serif; text-align: left; text-decoration: none; cursor: pointer; box-sizing: border-box;
+}
+.ms-acc-q:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.ms-acc-q:focus-visible { outline: 2px solid #0b3d3e; outline-offset: -2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .ms-acc-card, .ms-acc-plus { transition: none; } }
+/* tablet / mobil: egymas alatt; az osszehuzott panel egy sor (ikon, cim, "+") */
+@media (max-width: 1023.98px) {
+  .ms-acc { flex-direction: column; gap: 16px; }
+  .ms-acc-card, .ms-acc-card.is-open { flex: none; min-height: 0; }
+  .ms-acc-btn { flex-direction: row; align-items: center; gap: 12px; }
+  .ms-acc-row { flex: 1 1 auto; min-width: 0; width: auto; }
+  .ms-acc-card.is-open .ms-acc-row { flex-basis: 100%; }
+  .ms-acc-title { min-width: 0; }
+  .ms-acc-plus { margin: 0 0 0 auto; flex: none; }
+  .ms-acc-card.is-open .ms-acc-btn { align-items: flex-start; flex-wrap: wrap; }
+  .ms-acc-card.is-open .ms-acc-ic { flex: 0 0 100%; }
+}
+
+/* elvalasztó vonal a "Miben tud segiteni" es a hirek kozott (Figma 939-3121) */
+.ms-help-in { padding-bottom: 48px; }
+.ms-news::before { content: ""; display: block; width: calc(100% - 32px); max-width: 1448px; margin: 0 auto; border-top: 1px solid #dde7e3; }
+.ms-news-in { padding-top: 64px; }
+
+/* osszehuzott panel: a fokuszgyuru a KARTYA koruli (nem a benne levo gomb korul); a nyitott panelen a gomb gyuruje marad */
+.ms-acc-card:not(.is-open) .ms-acc-btn:focus-visible { outline: none !important; }
+.ms-acc-card:not(.is-open):has(.ms-acc-btn:focus-visible) { outline: 2px solid #37f0bf; outline-offset: 2px; }
+
+/* a kartyak ikonja minden kepernyon 24x24 */
+.ms-acc-ic { flex: none; }
+.ms-acc-ic svg { display: block; flex: none; width: 24px; height: 24px; }
+
+/* asztali nezet: a nyiló panel tartalma a VEGSO szelessegen torik (nem a meg keskeny kartyan), igy a magassag nem ugrik
+   az animacio elejen. A vegso belso szelesseg = (sor szelessege - 2 x 32px rés - 3 x 48px belso margo) x 2,5 / 4,5 */
+@media (min-width: 1024px) {
+  .ms-acc { container-type: inline-size; }
+  .ms-acc-card.is-open > .ms-acc-h, .ms-acc-card.is-open > .ms-acc-panel { min-width: calc((100cqw - 208px) * 0.5556); box-sizing: border-box; }
+}
+
+/* a hosszu cim (pl. "Rechtsangelegenheiten") ne lojon ki a kartyabol: a sor/szo torik */
+.ms-acc-btn, .ms-acc-row, .ms-acc-title { min-width: 0; max-width: 100%; }
+.ms-acc-title { overflow-wrap: anywhere; hyphens: auto; }
+
+/* "+" gomb (asztal) / lefele nyil az osszehuzott kartyan (fuggoleges elrendezes: tablet, mobil); a nyitott kartyan nincs ikon */
+.ms-acc-ch { display: none; }
+@media (max-width: 1023.98px) {
+  .ms-acc-pl { display: none; }
+  .ms-acc-plus { color: #404753; }
+  .ms-acc-card:not(.is-open) .ms-acc-ch-down { display: block; }
+}
+
+/* "Hamarosan chat" szekcio (a "Miben tud segiteni" alatt): sotet zold sav, bal oldalt szoveg + pipalista, jobb oldalt peldabeszelgetes */
+.ms-chat { width: 100%; background: var(--ms-brand-1600); color: #fff; }
+.ms-chat-in { max-width: 1200px; margin: 0 auto; padding: 80px 16px; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 64px; align-items: center; }
+.ms-chat-text { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; min-width: 0; }
+.ms-chat-badge { margin: 0; padding: 4px 12px; border-radius: 999px; background: var(--ms-hl-strong); color: #0b2b2b; font: 600 14px/20px Inter, sans-serif; }
+.ms-chat h2 { margin: 0; color: #fff; text-align: left; font: 700 36px/1.25 Poppins, sans-serif; }
+.ms-chat-sub { margin: 8px 0 0; color: #fff; font: 600 18px/1.4 Inter, sans-serif; }
+.ms-chat-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.ms-chat-list li { display: flex; align-items: flex-start; gap: 12px; font: 400 16px/1.5 Inter, sans-serif; }
+.ms-chat-list svg { flex: none; width: 24px; height: 24px; color: var(--ms-hl-strong); }
+.ms-chat-demo { display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 20px; background: rgba(0,0,0,.28); }
+.ms-chat-b { max-width: 85%; padding: 12px 16px; border-radius: 16px; font: 400 15px/1.5 Inter, sans-serif; }
+.ms-chat-u { align-self: flex-end; background: var(--ms-hl); color: #0b2b2b; border-bottom-right-radius: 4px; }
+.ms-chat-a { align-self: flex-start; background: #fff; color: #1f2430; border-bottom-left-radius: 4px; }
+.ms-chat-typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+.ms-chat-typing i { width: 8px; height: 8px; border-radius: 50%; background: #9aa7a4; }
+@media (prefers-reduced-motion: no-preference) {
+  .ms-chat-typing i { animation: ms-chat-dot 1.2s ease-in-out infinite; }
+  .ms-chat-typing i:nth-child(2) { animation-delay: .15s; }
+  .ms-chat-typing i:nth-child(3) { animation-delay: .3s; }
+}
+@keyframes ms-chat-dot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+@media (max-width: 1023.98px) {
+  .ms-chat-in { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 56px 16px; }
+  .ms-chat h2 { font-size: 28px; }
+}
+
+/* a Jogi MI valaszai mellett a bagoly (kek-zold kor) */
+.ms-chat-row { display: flex; align-items: center; gap: 12px; max-width: 92%; align-self: flex-start; }
+.ms-chat-row .ms-chat-a { max-width: none; min-width: 0; }
+.ms-chat-av { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ms-hl-strong); }
+.ms-chat-av img { width: 20px; height: auto; display: block; }
+
+/* minden buborek ugyanabba az oszlopba igazodik (nincs cikk-cakk); a bagoly ugyanazon a bal szelen all, mint a buborekok */
+.ms-chat-demo .ms-chat-b { align-self: flex-start; max-width: 100%; box-sizing: border-box; }
+.ms-chat-demo .ms-chat-u { border-bottom-right-radius: 16px; border-bottom-left-radius: 4px; }
+.ms-chat-row { max-width: 100%; }
+.ms-chat-row .ms-chat-b { margin-left: 0; max-width: none; }
+
+/* a buborekok minden sarka egyforma (16px); a gondolkodo buborek marad kapszula */
+.ms-chat-demo .ms-chat-u, .ms-chat-demo .ms-chat-a:not(.ms-chat-typing) { border-radius: 16px; }
+
+/* asztali nezet: a "Jogi MI kereso", "Miben tud segiteni az MI?" es "Jogi hirek" cimek folott 80px */
+@media (min-width: 1024px) {
+  main div.lg\:py-\[96px\]:has(> div h1) { padding-top: 80px; }
+  .ms-help-in { padding-top: 80px; }
+  .ms-news-in { padding-top: 80px; }
+}
+
+/* a peldabeszelgetes szoveges alternativaja: csak kepernyoolvasonak (vizualisan rejtett); a buborekok aria-hidden */
+.ms-chat-alt { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ms-chat-demo { position: relative; }
+
+/* az osszehuzott kartya egesze kattinthato: a gomb ::after retege lefedi a kartyat (a fokuszgyuru mar a kartyan van) */
+.ms-acc-card { position: relative; }
+.ms-acc-card:not(.is-open) { cursor: pointer; }
+.ms-acc-card:not(.is-open) .ms-acc-btn::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
+.ms-acc-card:not(.is-open):hover .ms-acc-plus { background: #bff0df; }
+
+/* a peldabeszelgetes buborekonkent jelenik meg (a JS adja az .is-anim / .is-in osztalyt; csokkentett mozgasnal nincs animacio) */
+.ms-chat-demo.is-anim > :not(.ms-chat-alt) { opacity: 0; transform: translateY(16px); transition: opacity .4s ease, transform .4s ease; }
+.ms-chat-demo.is-anim > .is-in { opacity: 1; transform: none; }
+
+/* asztali nezet: a keresomezo magassaga ket sor szovegre elegendo (2 x 27px + 14px fent + 62px lent a gombsor miatt + 2px keret), igy nem no a mezo */
+@media (min-width: 641px) {
+  .ms-input-ds::part(base), .ms-input-ds::part(input) { min-height: 132px; }
+}
