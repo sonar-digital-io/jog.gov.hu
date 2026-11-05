@@ -11,7 +11,7 @@ oldal ott van sajat index.html-kent, igy a teljes betoltes helyesen mukodik.
 Idempotens: a MARKER-t egyszer szurja be. Fusd a mirror.py utan (npm run build resze)."""
 import os, glob
 
-ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "www")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MARKER = "offline-nav-fix"
 
 SNIPPET = (

@@ -4,7 +4,7 @@
 chunk betoltenek, es hogy a fooldal tartalmaz dap-ds komponenseket. Kilepokod!=0 hiba eseten."""
 import http.server, os, sys, threading, urllib.request, glob
 
-ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "www")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = 8791  # sajat port, hogy ne utkozzon a fuot szerverrel
 
 PAGES = [
