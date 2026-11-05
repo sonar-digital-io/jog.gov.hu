@@ -109,6 +109,7 @@ export function findIssues(model, doc = document) {
   if (href.startsWith("#") && href.length > 1) {
     const target = doc.getElementById(decodeURIComponent(href.slice(1)));
     if (!target) add(first.el, "skip-link", "error", `A skip link célja (${href}) nem létezik`);
+    else if (target.getClientRects().length === 0) add(first.el, "skip-link", "error", `A skip link célja (${href}) nem látható`);
     else if (!target.hasAttribute("tabindex") && target.tabIndex < 0) {
       // csak figyelmeztetes: ha egy script aktivalaskor fokuszalhatova teszi (gyakori minta), rendben van;
       // ezt statikusan nem latjuk - aktivalassal kell ellenorizni

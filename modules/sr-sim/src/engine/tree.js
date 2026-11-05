@@ -22,6 +22,7 @@ const SKIP_TAGS = new Set(["script", "style", "template", "noscript", "link", "m
 
 function isHidden(el) {
   if (el.getAttribute("aria-hidden") === "true" || el.hidden) return true;
+  if (el.hasAttribute("inert")) return true; // inert reszfa: sem Tab, sem felolvaso (a hoston vagjuk, igy az arnyek-DOM is kiesik)
   const cs = getComputedStyle(el);
   if (cs.display === "none") return true;
   if (cs.display === "contents") return false; // slot, wrapper custom elementek: nincs dobozuk, de a tartalmuk latszik
@@ -40,9 +41,10 @@ function flatChildren(node) {
 
 function isTabbable(el) {
   if (el.tabIndex < 0 || el.disabled) return false;
-  if (el.closest("[inert]")) return false; // inert reszfa: sem Tab, sem felolvaso
-  // display:contents elemnek nincs doboza: a bongeszo (Chromium) tabindex="0" mellett sem ad neki fokuszt
-  // (pl. a design system menupont-hostja; a fokuszt a benne levo gomb kapja)
+  // display:contents elemnek nincs doboza: ma egyik motor sem fokuszalja tabindex="0" mellett sem (Chromium
+  // csak a <slot tabindex>-et), pl. a design system menupont-hostjat - a fokuszt a benne levo gomb kapja.
+  // A szabvany (whatwg/html#9425) fokuszalhatova tenne; ha egy motor ezt kiadja, a host valodi ures
+  // Tab-megallo lesz - ezt a "Tab-sorrend = valodi Tab-sorrend" teszt fogja jelezni.
   if (getComputedStyle(el).display === "contents") return false;
   // <a> href nelkul nem kap fokuszt, de a tabIndex-e nehany bongeszoben 0
   if (el.localName === "a" && !el.hasAttribute("href") && !el.hasAttribute("tabindex")) return false;
