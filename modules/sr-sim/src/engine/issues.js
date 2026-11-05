@@ -110,7 +110,9 @@ export function findIssues(model, doc = document) {
     const target = doc.getElementById(decodeURIComponent(href.slice(1)));
     if (!target) add(first.el, "skip-link", "error", `A skip link célja (${href}) nem létezik`);
     else if (!target.hasAttribute("tabindex") && target.tabIndex < 0) {
-      add(first.el, "skip-link", "error", `A skip link célja (${href}) nem fókuszálható – hiányzik a tabindex="-1"`);
+      // csak figyelmeztetes: ha egy script aktivalaskor fokuszalhatova teszi (gyakori minta), rendben van;
+      // ezt statikusan nem latjuk - aktivalassal kell ellenorizni
+      add(first.el, "skip-link", "warn", `A skip link célja (${href}) magában nem fókuszálható (nincs tabindex="-1") – csak akkor jó, ha aktiváláskor szkript fókuszálja; ellenőrizd aktiválással`);
     }
   }
 

@@ -31,12 +31,40 @@ test("motor: H-sorrend és a főoldal ismert hibái", async ({ page }) => {
   expect(texts.D).toContain("Főmenü, navigációs régió");
   expect(texts.Tab[0]).toBe("Ugrás a fő tartalomra, hivatkozás");
   expect(texts.Tab).toContain("Keresés, szerkesztőmező");
-  // az akadalymentesitesi javitasok utan is megmarado, ismert hibak (ha kijavitjak, innen torolni)
-  for (const id of ["focus-no-name", "skip-link"]) expect(ids, id).toContain(id);
-  // a javitasokkal megszunt hibak ne jojjenek vissza
-  for (const id of ["heading-skip", "heading-hidden", "landmark-name", "dup-link", "idref"]) {
+  // a skip link celjat szkript teszi fokuszalhatova (lasd lent): statikusan csak figyelmeztetes
+  expect(ids).toContain("skip-link");
+  // a javitasokkal megszunt hibak ne jojjenek vissza; a display:contents menupont-host nem ures Tab-megallo
+  for (const id of ["heading-skip", "heading-hidden", "landmark-name", "dup-link", "idref", "focus-no-name"]) {
     expect(ids, id).not.toContain(id);
   }
+});
+
+test("oldal: a szimulátor Tab-sorrendje = a böngésző valódi Tab-sorrendje", async ({ page }) => {
+  await open(page);
+  const { texts } = await analyze(page);
+  const simIdx = texts.Tab.indexOf("Keresés, szerkesztőmező");
+  expect(simIdx).toBeGreaterThan(0);
+  let realIdx = -1;
+  for (let i = 0; i < 20 && realIdx < 0; i++) {
+    await page.keyboard.press("Tab");
+    const tag = await page.evaluate(() => {
+      let a = document.activeElement;
+      while (a?.shadowRoot?.activeElement) a = a.shadowRoot.activeElement; // a DS-komponensek arnyek-DOM-jaba
+      return a?.localName;
+    });
+    if (tag === "textarea") realIdx = i;
+  }
+  expect(realIdx).toBe(simIdx); // ugyanannyi Tab-megallo van a keresomezo elott
+});
+
+test("oldal: a skip link a fő tartalomra viszi a fókuszt", async ({ page }) => {
+  await open(page);
+  await page.keyboard.press("Tab");
+  await expect(page.locator("a.skip-to-content")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main")).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.querySelector("main").contains(document.activeElement))).toBe(true);
 });
 
 test("motor: aria-hidden alatti fókuszálható elem = néma Tab-megálló", async ({ page }) => {

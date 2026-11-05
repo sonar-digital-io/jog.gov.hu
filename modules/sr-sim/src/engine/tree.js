@@ -40,6 +40,10 @@ function flatChildren(node) {
 
 function isTabbable(el) {
   if (el.tabIndex < 0 || el.disabled) return false;
+  if (el.closest("[inert]")) return false; // inert reszfa: sem Tab, sem felolvaso
+  // display:contents elemnek nincs doboza: a bongeszo (Chromium) tabindex="0" mellett sem ad neki fokuszt
+  // (pl. a design system menupont-hostja; a fokuszt a benne levo gomb kapja)
+  if (getComputedStyle(el).display === "contents") return false;
   // <a> href nelkul nem kap fokuszt, de a tabIndex-e nehany bongeszoben 0
   if (el.localName === "a" && !el.hasAttribute("href") && !el.hasAttribute("tabindex")) return false;
   return true;
